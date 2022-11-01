@@ -1,6 +1,6 @@
 package camera_sequence;
 
-import camera_sequence.sequence.CameraSequence;
+import camera_sequence.sequence.NodeSequence;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -11,7 +11,7 @@ import java.util.ArrayList;
 
 public class ExampleMod implements ModInitializer {
 	public static final Logger LOGGER = LoggerFactory.getLogger("modid");
-	public static ArrayList<CameraSequence> sequences = new ArrayList<>();
+	public static ArrayList<NodeSequence> sequences = new ArrayList<>();
 	public static DatapackWriter datapackWriter;
 
 	@Override

@@ -3,20 +3,20 @@ package camera_sequence.sequence;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CameraSequence {
+public class NodeSequence {
     private String sequenceName;
-    private ArrayList<CameraNode> cameraNodes;
+    private ArrayList<Node> cameraNodes;
 
-    public CameraSequence(String name) {
+    public NodeSequence(String name) {
         this.sequenceName = name;
         this.cameraNodes = new ArrayList<>();
     }
 
-    public void appendCameraNode(CameraNode node) {
+    public void appendCameraNode(Node node) {
         cameraNodes.add(node);
     }
 
-    public List<CameraNode> getCameraNodes() {
+    public ArrayList<Node> getCameraNodes() {
         return cameraNodes;
     }
 

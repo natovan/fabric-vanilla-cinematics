@@ -1,7 +1,7 @@
 package camera_sequence;
 
-import camera_sequence.sequence.CameraNode;
-import camera_sequence.sequence.CameraSequence;
+import camera_sequence.sequence.Node;
+import camera_sequence.sequence.NodeSequence;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.logging.LogUtils;
 import net.minecraft.server.command.CommandManager;
@@ -41,12 +41,17 @@ public class CamseqCommand {
     }
 
     private static int writeToDatapack(ServerCommandSource source, String name) {
-        ExampleMod.datapackWriter.initDatapack();
+        for (NodeSequence s : ExampleMod.sequences) {
+            if (s.getSequenceName().equals(name)) {
+                ExampleMod.datapackWriter.writeSequence(s);
+                source.sendFeedback(Text.of("Trying to write to sequence"), false);
+            }
+        }
         return 1;
     }
 
     private static int newCameraSequence(ServerCommandSource source, String name) {
-        ExampleMod.sequences.add(new CameraSequence(name));
+        ExampleMod.sequences.add(new NodeSequence(name));
         source.sendFeedback(Text.of("NEW SEQ: '" + name + "'"), false);
 
         return 1;
@@ -57,8 +62,8 @@ public class CamseqCommand {
             Vec3d pos = source.getPlayer().getPos();
             float yaw = source.getPlayer().getYaw();
             float pitch = source.getPlayer().getPitch();
-            CameraNode node = new CameraNode(pos, yaw, pitch, 50);
-            for (CameraSequence s : ExampleMod.sequences) {
+            Node node = new Node(pos, yaw, pitch, 20);
+            for (NodeSequence s : ExampleMod.sequences) {
                 if (s.getSequenceName().equals(cameraSequenceName)) s.appendCameraNode(node);
             }
             source.sendFeedback(Text.of("APPENDED NODE AT POS: " +
@@ -68,10 +73,10 @@ public class CamseqCommand {
     }
 
     private static int printNodes(ServerCommandSource source, String cameraSequenceName) {
-        for (CameraSequence s : ExampleMod.sequences) {
+        for (NodeSequence s : ExampleMod.sequences) {
             if (s.getSequenceName().equals(cameraSequenceName)) {
                 int c = 0;
-                for (CameraNode n : s.getCameraNodes()) {
+                for (Node n : s.getCameraNodes()) {
                     c++;
                     String fmt = String.format("%d. Yaw: %f Pitch: %f Pos: %f %f %f", c,
                             n.getYaw(), n.getPitch(), n.getPos().x, n.getPos().y, n.getPos().z);
@@ -84,12 +89,12 @@ public class CamseqCommand {
 
     private static int spawnSequence(ServerCommandSource source, String cameraSequenceName) {
         CommandManager manager = source.getServer().getCommandManager();
-        for (CameraSequence s : ExampleMod.sequences) {
+        for (NodeSequence s : ExampleMod.sequences) {
             if (s.getSequenceName().equals(cameraSequenceName)) {
 
                 // Sequence found
                 int i = 0;
-                for (CameraNode n : s.getCameraNodes()) {
+                for (Node n : s.getCameraNodes()) {
                     manager.executeWithPrefix(source, String.format(
                             "/summon minecraft:armor_stand %f %f %f {NoGravity:1, Tags:['sequence_%s', 'sequence_node_%d']}",
                             n.getPos().x, n.getPos().y, n.getPos().z, s.getSequenceName(), i));
@@ -105,7 +110,7 @@ public class CamseqCommand {
 
     private static int despawnSequence(ServerCommandSource source, String cameraSequenceName) {
         CommandManager manager = source.getServer().getCommandManager();
-        for (CameraSequence s : ExampleMod.sequences) {
+        for (NodeSequence s : ExampleMod.sequences) {
             if (s.getSequenceName().equals(cameraSequenceName)) {
 
                 // Sequence found

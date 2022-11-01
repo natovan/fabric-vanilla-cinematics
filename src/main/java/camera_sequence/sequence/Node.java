@@ -2,13 +2,13 @@ package camera_sequence.sequence;
 
 import net.minecraft.util.math.Vec3d;
 
-public class CameraNode {
+public class Node {
     private Vec3d pos;
     private float yaw;
     private float pitch;
     private int delay; // in ticks
 
-    public CameraNode(Vec3d pos, float yaw, float pitch, int delay) {
+    public Node(Vec3d pos, float yaw, float pitch, int delay) {
         this.pos = pos;
         this.yaw = yaw;
         this.pitch = pitch;
