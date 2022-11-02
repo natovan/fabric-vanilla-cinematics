@@ -37,17 +37,20 @@ public class CamseqCommand {
                                 executes((c) -> despawnSequence(c.getSource(), getString(c, "sequence name"))))).
                 then(literal("write").
                         then(argument("sequence name", word()).
-                                executes((c) -> writeToDatapack(c.getSource(), getString(c, "sequence name"))))));
+                                executes((c) -> writeToDatapack(c.getSource(), getString(c, "sequence name"))))).
+                then(literal("delete").
+                        executes((c) -> deleteDatapack())));
     }
 
     private static int writeToDatapack(ServerCommandSource source, String name) {
         for (NodeSequence s : ExampleMod.sequences) {
             if (s.getSequenceName().equals(name)) {
                 ExampleMod.datapackWriter.writeSequence(s);
-                source.sendFeedback(Text.of("Trying to write to sequence"), false);
+                source.sendFeedback(Text.of("Writing " + s.getSequenceName() + " to a datapack"), false);
+                return 1;
             }
         }
-        return 1;
+        return 0;
     }
 
     private static int newCameraSequence(ServerCommandSource source, String name) {
@@ -118,6 +121,11 @@ public class CamseqCommand {
                 manager.executeWithPrefix(source, String.format("/kill @e[tag=sequence_%s]", s.getSequenceName()));
             }
         }
+        return 1;
+    }
+
+    private static int deleteDatapack() {
+        ExampleMod.datapackWriter.deleteDatapack();
         return 1;
     }
 }
