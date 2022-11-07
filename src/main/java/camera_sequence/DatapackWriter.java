@@ -5,6 +5,8 @@ import camera_sequence.sequence.NodeSequence;
 import com.mojang.logging.LogUtils;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.WorldSavePath;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.random.Random;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 
@@ -55,7 +57,14 @@ public class DatapackWriter {
             loadWriter.close();
 
             FileWriter mainFuncWriter = new FileWriter(this.datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\main.mcfunction");
-            mainFuncWriter.write("execute if score @a[limit=1] in_sequence matches 1 run spectate @e[tag=current_sequence_node, limit=1] @a[limit=1]");
+            mainFuncWriter.write("execute if score @a[limit=1] in_sequence matches 1 run spectate @e[tag=current_sequence_node, limit=1] @a[limit=1]\n");
+            Random rand = Random.create();
+            for (int i = 0; i < 10000; i++) {
+                int randX = MathHelper.nextInt(rand, -5000, 5000);
+                int randY = MathHelper.nextInt(rand, -5000, 5000);
+                int randDist = MathHelper.nextInt(rand, 1, 100);
+                mainFuncWriter.write("execute positioned %d -60 %d if entity @a[distance=..%d] run say %d blocks away from %d %d\n".formatted(randX, randY, randDist, randDist, randX, randY));
+            }
             mainFuncWriter.close();
 
             FileWriter loadFuncWriter = new FileWriter(this.datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\load.mcfunction");

@@ -3,20 +3,16 @@ package camera_sequence;
 import camera_sequence.sequence.Node;
 import camera_sequence.sequence.NodeSequence;
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.logging.LogUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.Vec3d;
-import org.slf4j.Logger;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.*;
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
 
 public class CamseqCommand {
-
-    private static final Logger LOGGER = LogUtils.getLogger();
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher)
     {
         dispatcher.register(literal("c").
