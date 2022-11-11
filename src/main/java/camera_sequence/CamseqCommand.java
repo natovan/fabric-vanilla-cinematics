@@ -9,119 +9,92 @@ import net.minecraft.text.Text;
 import net.minecraft.util.math.Vec3d;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.*;
+import static com.mojang.brigadier.arguments.IntegerArgumentType.*;
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
 
 public class CamseqCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher)
     {
+        // todo: fix this mess
         dispatcher.register(literal("c").
-                then(literal("new").
-                        then(argument("sequence name", word()).
-                                executes((c) -> newCameraSequence(c.getSource(), getString(c, "sequence name"))))).
-                then(literal("add_node").
-                        then(argument("sequence name", word()).
-                                executes((c) -> addCameraNode(c.getSource(), getString(c, "sequence name"))))).
-                then(literal("print").
-                        then(argument("sequence name", word()).
-                                executes((c) -> printNodes(c.getSource(), getString(c, "sequence name"))))).
-                then(literal("spawn").
-                        then(argument("sequence name", word()).
-                                executes((c) -> spawnSequence(c.getSource(), getString(c, "sequence name"))))).
-                then(literal("despawn").
-                        then(argument("sequence name", word()).
-                                executes((c) -> despawnSequence(c.getSource(), getString(c, "sequence name"))))).
+                then(literal("newscene").
+                        then(argument("scene name", word()).
+                                executes((c) -> newCameraSequence(c.getSource(), getString(c, "scene name"))))));
+        dispatcher.register(literal("c").
+                then(literal("addnode").
+                        then(argument("scene name", word()).
+                                then(argument("delay", integer()).
+                                        executes((c) -> addCameraNode(c.getSource(), getString(c, "scene name"), getInteger(c, "delay")))))));
+        dispatcher.register(literal("c").
                 then(literal("write").
-                        then(argument("sequence name", word()).
-                                executes((c) -> writeToDatapack(c.getSource(), getString(c, "sequence name"))))).
-                then(literal("delete").
-                        executes((c) -> deleteDatapack())));
+                        executes((c) -> write(c.getSource()))));
+        dispatcher.register(literal("c").
+                then(literal("load").
+                        executes((c) -> reload(c.getSource()))));
     }
 
-    private static int writeToDatapack(ServerCommandSource source, String name) {
+    private static int reload(ServerCommandSource source) {
+        ExampleMod.sequences.clear();
+        if (DataStorage.INSTANCE.load() == 1) {
+            source.sendFeedback(Text.of("Loaded from sequences.json"), false);
+        } else {
+            source.sendFeedback(Text.of("Error while loading from sequences.json"), false);
+        }
+        CommandManager manager = source.getServer().getCommandManager();
+        manager.executeWithPrefix(source, "/reload");
+        return 1;
+    }
+
+    private static int write(ServerCommandSource source) {
         for (NodeSequence s : ExampleMod.sequences) {
-            if (s.getSequenceName().equals(name)) {
-                ExampleMod.datapackWriter.writeSequence(s);
-                source.sendFeedback(Text.of("Writing " + s.getSequenceName() + " to a datapack"), false);
-                return 1;
+            if (DatapackWriter.INSTANCE.writeSequence(s) == 1) {
+                source.sendFeedback(Text.of("Wrote " + s.getSequenceName() + " to the datapack"), false);
+            } else {
+                source.sendFeedback(Text.of("Error occurred while writing to the datapack"), false);
             }
         }
-        return 0;
+        if (DataStorage.INSTANCE.write() == 1) {
+            source.sendFeedback(Text.of("Wrote to sequences.json"), false);
+        } else {
+            source.sendFeedback(Text.of("Error while writing to sequences.json"), false);
+        }
+
+        CommandManager manager = source.getServer().getCommandManager();
+        manager.executeWithPrefix(source, "/reload");
+        return 1;
     }
 
     private static int newCameraSequence(ServerCommandSource source, String name) {
         ExampleMod.sequences.add(new NodeSequence(name));
-        source.sendFeedback(Text.of("NEW SEQ: '" + name + "'"), false);
 
+        char c;
+        for (int i = 0; i < name.length(); i++) {
+            c = name.charAt(i);
+            if (Character.isUpperCase(c)) {
+                source.sendFeedback(Text.of("Can't have uppercase letters in sequence names"), false);
+                return 0;
+            }
+        }
+        source.sendFeedback(Text.of("New sequence: '" + name + "' created"), false);
         return 1;
     }
 
-    private static int addCameraNode(ServerCommandSource source, String cameraSequenceName) {
+    private static int addCameraNode(ServerCommandSource source, String cameraSequenceName, int delay) {
         if (source.getPlayer() != null) {
-            Vec3d pos = source.getPlayer().getPos();
+            Vec3d standPos = source.getPlayer().getPos();
+            float armorStandEyeHeight = 1.7f; // ? i actually have no idea
+            Vec3d eyePos = new Vec3d(standPos.x, standPos.y + armorStandEyeHeight, standPos.z);
             float yaw = source.getPlayer().getYaw();
             float pitch = source.getPlayer().getPitch();
-            Node node = new Node(pos, yaw, pitch, 20);
+
+            Node node = new Node(standPos, eyePos, yaw, pitch, delay);
+
             for (NodeSequence s : ExampleMod.sequences) {
                 if (s.getSequenceName().equals(cameraSequenceName)) s.appendCameraNode(node);
             }
-            source.sendFeedback(Text.of("APPENDED NODE AT POS: " +
-                    pos.x + " " + pos.y + " " + pos.z), false);
+            source.sendFeedback(Text.of("Appended node to " + cameraSequenceName + " at at position: %.2f, %.2f, %.2f".formatted(standPos.x, standPos.y, standPos.z)), false);
         }
-        return 1;
-    }
-
-    private static int printNodes(ServerCommandSource source, String cameraSequenceName) {
-        for (NodeSequence s : ExampleMod.sequences) {
-            if (s.getSequenceName().equals(cameraSequenceName)) {
-                int c = 0;
-                for (Node n : s.getCameraNodes()) {
-                    c++;
-                    String fmt = String.format("%d. Yaw: %f Pitch: %f Pos: %f %f %f", c,
-                            n.getYaw(), n.getPitch(), n.getPos().x, n.getPos().y, n.getPos().z);
-                    source.sendFeedback(Text.of(fmt), false);
-                }
-            }
-        }
-        return 1;
-    }
-
-    private static int spawnSequence(ServerCommandSource source, String cameraSequenceName) {
-        CommandManager manager = source.getServer().getCommandManager();
-        for (NodeSequence s : ExampleMod.sequences) {
-            if (s.getSequenceName().equals(cameraSequenceName)) {
-
-                // Sequence found
-                int i = 0;
-                for (Node n : s.getCameraNodes()) {
-                    manager.executeWithPrefix(source, String.format(
-                            "/summon minecraft:armor_stand %f %f %f {NoGravity:1, Tags:['sequence_%s', 'sequence_node_%d']}",
-                            n.getPos().x, n.getPos().y, n.getPos().z, s.getSequenceName(), i));
-                    manager.executeWithPrefix(source, String.format(
-                            "/tp @e[tag=sequence_%s, tag=sequence_node_%d] %f %f %f %f %f",
-                            s.getSequenceName(), i, n.getPos().x, n.getPos().y, n.getPos().z, n.getYaw(), n.getPitch()));
-                    i++;
-                }
-            }
-        }
-        return 1;
-    }
-
-    private static int despawnSequence(ServerCommandSource source, String cameraSequenceName) {
-        CommandManager manager = source.getServer().getCommandManager();
-        for (NodeSequence s : ExampleMod.sequences) {
-            if (s.getSequenceName().equals(cameraSequenceName)) {
-
-                // Sequence found
-                // @TODO kill even if out of simulation distance
-                manager.executeWithPrefix(source, String.format("/kill @e[tag=sequence_%s]", s.getSequenceName()));
-            }
-        }
-        return 1;
-    }
-
-    private static int deleteDatapack() {
-        ExampleMod.datapackWriter.deleteDatapack();
         return 1;
     }
 }

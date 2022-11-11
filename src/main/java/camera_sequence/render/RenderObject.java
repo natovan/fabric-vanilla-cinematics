@@ -11,6 +11,7 @@ import net.minecraft.util.math.Matrix4f;
 
 import java.util.function.Supplier;
 
+// Stolen from minihud
 public class RenderObject {
     private final VertexFormat.DrawMode glMode;
     private final VertexBuffer vertexBuffer;

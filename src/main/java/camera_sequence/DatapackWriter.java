@@ -3,10 +3,9 @@ package camera_sequence;
 import camera_sequence.sequence.Node;
 import camera_sequence.sequence.NodeSequence;
 import com.mojang.logging.LogUtils;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.WorldSavePath;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.random.Random;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 
@@ -18,22 +17,24 @@ import java.nio.file.Paths;
 
 public class DatapackWriter {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private final String datapacksPath;
+    public static final DatapackWriter INSTANCE = new DatapackWriter();
     private boolean wasInitiated = false;
 
-    public DatapackWriter(MinecraftServer server) {
-        this.datapacksPath = server.getSavePath(WorldSavePath.DATAPACKS).toString();
-    }
+    public DatapackWriter() {}
 
     public void initDatapack() {
+        MinecraftServer server = MinecraftClient.getInstance().getServer();
+        if (server == null) return;
+        String datapacksPath = server.getSavePath(WorldSavePath.DATAPACKS).toString();
+
         try {
-            Files.createDirectories(Paths.get(this.datapacksPath + "\\VanillaCinematics\\data\\minecraft\\tags\\functions"));
-            File tickFile = new File(this.datapacksPath + "\\VanillaCinematics\\data\\minecraft\\tags\\functions\\tick.json");
-            File loadFile = new File(this.datapacksPath + "\\VanillaCinematics\\data\\minecraft\\tags\\functions\\load.json");
-            File packFile = new File(this.datapacksPath + "\\VanillaCinematics\\pack.mcmeta");
-            Files.createDirectories(Paths.get(this.datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics"));
-            File loadMcFuncFile = new File(this.datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\load.mcfunction");
-            File mainMcFuncFile = new File(this.datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\main.mcfunction");
+            Files.createDirectories(Paths.get(datapacksPath + "\\VanillaCinematics\\data\\minecraft\\tags\\functions"));
+            File tickFile = new File(datapacksPath + "\\VanillaCinematics\\data\\minecraft\\tags\\functions\\tick.json");
+            File loadFile = new File(datapacksPath + "\\VanillaCinematics\\data\\minecraft\\tags\\functions\\load.json");
+            File packFile = new File(datapacksPath + "\\VanillaCinematics\\pack.mcmeta");
+            Files.createDirectories(Paths.get(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics"));
+            File loadMcFuncFile = new File(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\load.mcfunction");
+            File mainMcFuncFile = new File(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\main.mcfunction");
             if (tickFile.createNewFile() &&
                     loadFile.createNewFile() &&
                     packFile.createNewFile() &&
@@ -44,30 +45,22 @@ public class DatapackWriter {
                 LOGGER.info("Some initial datapack files already exist. That's fine");
             }
 
-            FileWriter packWriter = new FileWriter(this.datapacksPath + "\\VanillaCinematics\\pack.mcmeta");
+            FileWriter packWriter = new FileWriter(datapacksPath + "\\VanillaCinematics\\pack.mcmeta");
             packWriter.write("{\"pack\":{\"pack_format\": 3, \"description\":" + "\"Auto generated datapack for camera sequences\"}}");
             packWriter.close();
 
-            FileWriter tickWriter = new FileWriter(this.datapacksPath + "\\VanillaCinematics\\data\\minecraft\\tags\\functions\\tick.json");
+            FileWriter tickWriter = new FileWriter(datapacksPath + "\\VanillaCinematics\\data\\minecraft\\tags\\functions\\tick.json");
             tickWriter.write("{\"values\":[\"vanilla_cinematics:main\"]}");
             tickWriter.close();
 
-            FileWriter loadWriter = new FileWriter(this.datapacksPath + "\\VanillaCinematics\\data\\minecraft\\tags\\functions\\load.json");
+            FileWriter loadWriter = new FileWriter(datapacksPath + "\\VanillaCinematics\\data\\minecraft\\tags\\functions\\load.json");
             loadWriter.write("{\"values\":[\"vanilla_cinematics:load\"]}");
             loadWriter.close();
 
-            FileWriter mainFuncWriter = new FileWriter(this.datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\main.mcfunction");
+            FileWriter mainFuncWriter = new FileWriter(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\main.mcfunction");
             mainFuncWriter.write("execute if score @a[limit=1] in_sequence matches 1 run spectate @e[tag=current_sequence_node, limit=1] @a[limit=1]\n");
-            Random rand = Random.create();
-            for (int i = 0; i < 10000; i++) {
-                int randX = MathHelper.nextInt(rand, -5000, 5000);
-                int randY = MathHelper.nextInt(rand, -5000, 5000);
-                int randDist = MathHelper.nextInt(rand, 1, 100);
-                mainFuncWriter.write("execute positioned %d -60 %d if entity @a[distance=..%d] run say %d blocks away from %d %d\n".formatted(randX, randY, randDist, randDist, randX, randY));
-            }
-            mainFuncWriter.close();
 
-            FileWriter loadFuncWriter = new FileWriter(this.datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\load.mcfunction");
+            FileWriter loadFuncWriter = new FileWriter(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\load.mcfunction");
             loadFuncWriter.write("tellraw @a {\"text\":\"Vanilla Cinematics datapack loaded\",\"color\":\"#FFD866\"}");
             loadFuncWriter.close();
         } catch (IOException e) {
@@ -78,21 +71,25 @@ public class DatapackWriter {
 
     // TODO: not perfect positioning, fix it
     // TODO: hide return armor stand
-    public void writeSequence(NodeSequence s) {
+    public int writeSequence(NodeSequence s) {
         if (!wasInitiated) initDatapack();
+
+        MinecraftServer server = MinecraftClient.getInstance().getServer();
+        if (server == null) return 0;
+        String datapacksPath = server.getSavePath(WorldSavePath.DATAPACKS).toString();
 
         try {
             // create folder for cinematic
-            Files.createDirectories(Paths.get(this.datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName()));
+            Files.createDirectories(Paths.get(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName()));
 
             // start.mcfunction
-            File startMcFuncFile = new File(this.datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\start.mcfunction");
+            File startMcFuncFile = new File(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\start.mcfunction");
             if (startMcFuncFile.createNewFile()) {
                 LOGGER.info("start.mcfunction created");
             } else {
                 LOGGER.info("start.mcfunction already exists");
             }
-            FileWriter startMcFuncWriter = new FileWriter(this.datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\start.mcfunction");
+            FileWriter startMcFuncWriter = new FileWriter(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\start.mcfunction");
             startMcFuncWriter.write(
                     """
                     execute at @a run summon minecraft:armor_stand ~ ~ ~ {Invisible: 1, NoGravity:1, Tags:['sequence_%s', 'sequence_node_player_pos']}
@@ -108,16 +105,16 @@ public class DatapackWriter {
             int c = 0;
             for (; c < s.getCameraNodes().size(); c++) {
                 Node n = s.getCameraNodes().get(c);
-                File nodeMcFuncFile = new File(this.datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\node" + c + ".mcfunction");
+                File nodeMcFuncFile = new File(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\node" + c + ".mcfunction");
                 if (nodeMcFuncFile.createNewFile()) {
                     LOGGER.info("node " + c + ".mcfunction created");
                 } else {
                     LOGGER.info("node" + c + ".mcfunction already exists");
                 }
 
-                FileWriter nodeWriter = new FileWriter(this.datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\node" + c + ".mcfunction");
+                FileWriter nodeWriter = new FileWriter(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\node" + c + ".mcfunction");
                 if (c > 0) nodeWriter.write("tag @e[tag=sequence_node_%d] remove current_sequence_node\n".formatted(c - 1));
-                nodeWriter.write("summon minecraft:armor_stand %f %f %f {Rotation:[%ff, %ff], Invisible:1, NoGravity:1, Tags:['sequence_%s', 'sequence_node_%d', 'current_sequence_node']}\n".formatted(n.getPos().x, n.getPos().y, n.getPos().z, n.getYaw(), n.getPitch(), s.getSequenceName(), c));
+                nodeWriter.write("summon minecraft:armor_stand %f %f %f {Rotation:[%ff, %ff], Invisible:1, NoGravity:1, Tags:['sequence_%s', 'sequence_node_%d', 'current_sequence_node']}\n".formatted(n.getStandPos().x, n.getStandPos().y, n.getStandPos().z, n.getYaw(), n.getPitch(), s.getSequenceName(), c));
                 nodeWriter.write("spectate @e[tag=current_sequence_node, limit=1] @a[limit=1]\n");
                 if (c > 0) nodeWriter.write("kill @e[tag=sequence_%s, tag=sequence_node_%d]\n".formatted(s.getSequenceName(), c - 1));
                 if (c == s.getCameraNodes().size() - 1) {
@@ -129,30 +126,30 @@ public class DatapackWriter {
             }
 
             // preend
-            File preendMcFuncFile = new File(this.datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\preend.mcfunction");
+            File preendMcFuncFile = new File(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\preend.mcfunction");
             if (preendMcFuncFile.createNewFile()) {
                 LOGGER.info("preend.mcfunction created");
             } else {
                 LOGGER.info("preend.mcfuncton already exist");
             }
-            FileWriter preendWriter = new FileWriter(this.datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\preend.mcfunction");
+            FileWriter preendWriter = new FileWriter(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\preend.mcfunction");
             preendWriter.write(
                 """
                 kill @e[tag=sequence_%s, tag=sequence_node_%d]
                 scoreboard players set @a[limit=1] in_sequence 0
                 spectate @e[tag=sequence_%s, tag=sequence_node_player_pos, limit=1] @a[limit=1]
                 schedule function vanilla_cinematics:cinematics/%s/end 5t""".
-                formatted(s.getSequenceName(), c, s.getSequenceName(), s.getSequenceName()));
+                formatted(s.getSequenceName(), c - 1, s.getSequenceName(), s.getSequenceName()));
             preendWriter.close();
 
             // end
-            File endMcFuncFile = new File(this.datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\end.mcfunction");
+            File endMcFuncFile = new File(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\end.mcfunction");
             if (endMcFuncFile.createNewFile()) {
                 LOGGER.info("end.mcfunction created");
             } else {
                 LOGGER.info("end.mcfunction already exist");
             }
-            FileWriter endWriter = new FileWriter(this.datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\end.mcfunction");
+            FileWriter endWriter = new FileWriter(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\end.mcfunction");
             endWriter.write(
                 """
                 gamemode adventure @a
@@ -162,15 +159,21 @@ public class DatapackWriter {
             endWriter.close();
         } catch (IOException e) {
             LOGGER.error("An error occurred while writing new sequence to datapack", e);
+            return 0;
         }
+        return 1;
     }
 
     public void deleteDatapack() {
-        try {
-            FileUtils.deleteDirectory(new File(this.datapacksPath + "\\VanillaCinematics"));
-            wasInitiated = false;
-        } catch (IOException e) {
-            LOGGER.error("An error occurred while deleting datapack", e);
+        MinecraftServer server = MinecraftClient.getInstance().getServer();
+        if (server != null) {
+            String datapacksPath = server.getSavePath(WorldSavePath.DATAPACKS).toString();
+            try {
+                FileUtils.deleteDirectory(new File(datapacksPath + "\\VanillaCinematics"));
+                wasInitiated = false;
+            } catch (IOException e) {
+                LOGGER.error("An error occurred while deleting datapack", e);
+            }
         }
     }
 }
