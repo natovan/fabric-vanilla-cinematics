@@ -59,6 +59,7 @@ public class DatapackWriter {
 
             FileWriter mainFuncWriter = new FileWriter(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\main.mcfunction");
             mainFuncWriter.write("execute if score @a[limit=1] in_sequence matches 1 run spectate @e[tag=current_sequence_node, limit=1] @a[limit=1]\n");
+            mainFuncWriter.close();
 
             FileWriter loadFuncWriter = new FileWriter(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\load.mcfunction");
             loadFuncWriter.write("tellraw @a {\"text\":\"Vanilla Cinematics datapack loaded\",\"color\":\"#FFD866\"}");
