@@ -1,5 +1,6 @@
 package camera_sequence.render;
 
+import camera_sequence.ExampleMod;
 import fi.dy.masa.malilib.interfaces.IRenderer;
 import fi.dy.masa.malilib.render.RenderUtils;
 import net.minecraft.client.MinecraftClient;

@@ -116,6 +116,7 @@ public class DatapackWriter {
                 if (c > 0) nodeWriter.write("tag @e[tag=sequence_node_%d] remove current_sequence_node\n".formatted(c - 1));
                 nodeWriter.write("summon minecraft:armor_stand %f %f %f {Rotation:[%ff, %ff], Invisible:1, NoGravity:1, Tags:['sequence_%s', 'sequence_node_%d', 'current_sequence_node']}\n".formatted(n.getStandPos().x, n.getStandPos().y, n.getStandPos().z, n.getYaw(), n.getPitch(), s.getSequenceName(), c));
                 nodeWriter.write("spectate @e[tag=current_sequence_node, limit=1] @a[limit=1]\n");
+                if (n.getCommand() != null) nodeWriter.write(n.getCommand() + "\n");
                 if (c > 0) nodeWriter.write("kill @e[tag=sequence_%s, tag=sequence_node_%d]\n".formatted(s.getSequenceName(), c - 1));
                 if (c == s.getCameraNodes().size() - 1) {
                     nodeWriter.write("schedule function vanilla_cinematics:cinematics/%s/preend %dt".formatted(s.getSequenceName(), n.getDelay()));

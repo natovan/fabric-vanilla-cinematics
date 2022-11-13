@@ -20,6 +20,7 @@ public class NodeRenderer {
     private static final Identifier TEXTURE = new Identifier("modid", "textures/misc/camera.png");
     private final MinecraftClient mc;
     private final RenderObject spriteObject, lineObject;
+    public boolean shouldRender = true;
 
     public NodeRenderer() {
         this.mc = MinecraftClient.getInstance();
@@ -37,6 +38,7 @@ public class NodeRenderer {
     }
 
     public void render(MatrixStack matrixStack, Matrix4f projMatrix) {
+        if (!this.shouldRender) return;
         Camera c = this.mc.gameRenderer.getCamera();
 
         RenderSystem.disableCull();
@@ -49,6 +51,8 @@ public class NodeRenderer {
 
 
                 // Drawing sprites
+                RenderUtils.setupBlend();
+                RenderUtils.color(1.0f, 1.0f, 1.0f, 0.45f);
                 Node n = nodes.get(i);
                 if (c.getPos().distanceTo(n.getStandPos()) > viewDist) continue;
                 matrixStack.push();
@@ -61,6 +65,7 @@ public class NodeRenderer {
                 RenderUtils.bindTexture(TEXTURE);
                 this.spriteObject.draw(matrixStack, projMatrix);
                 matrixStack.pop();
+                RenderUtils.color(1.0f, 1.0f, 1.0f, 1.0f);
 
 
                 // Drawing lines in between. Good for now
@@ -89,6 +94,7 @@ public class NodeRenderer {
                 List<String> strings = new ArrayList<>();
                 strings.add(seq.getSequenceName() + " #" + i);
                 strings.add("Delay: " + n.getDelay());
+                if (n.getCommand() != null) strings.add(n.getCommand());
                 RenderUtils.drawTextPlate(strings, n.getEyePos().x, n.getEyePos().y + 0.8, n.getEyePos().z, 0.01f);
                 strings.clear();
 
