@@ -71,93 +71,81 @@ public class DatapackWriter {
     }
 
     // TODO: not perfect positioning, fix it
-    // TODO: hide return armor stand
     public int writeSequence(NodeSequence s) {
         if (!wasInitiated) initDatapack();
 
-        MinecraftServer server = MinecraftClient.getInstance().getServer();
+        final MinecraftServer server = MinecraftClient.getInstance().getServer();
         if (server == null) return 0;
-        String datapacksPath = server.getSavePath(WorldSavePath.DATAPACKS).toString();
+        final String datapacksPath = server.getSavePath(WorldSavePath.DATAPACKS).toString();
+        final String seqName = s.getSequenceName();
 
         try {
             // create folder for cinematic
-            Files.createDirectories(Paths.get(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName()));
+            Files.createDirectories(Paths.get(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + seqName));
 
             // start.mcfunction
-            File startMcFuncFile = new File(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\start.mcfunction");
+            File startMcFuncFile = new File(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + seqName + "\\start.mcfunction");
             if (startMcFuncFile.createNewFile()) {
                 LOGGER.info("start.mcfunction created");
             } else {
                 LOGGER.info("start.mcfunction already exists");
             }
-            FileWriter startMcFuncWriter = new FileWriter(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\start.mcfunction");
+            FileWriter startMcFuncWriter = new FileWriter(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + seqName + "\\start.mcfunction");
             startMcFuncWriter.write(
                     """
-                    execute at @a run summon minecraft:armor_stand ~ ~ ~ {Invisible: 1, NoGravity:1, Tags:['sequence_%s', 'sequence_node_player_pos']}
-                    execute at @a run tp @e[tag=sequence_%s, tag=sequence_node_player_pos] ~ ~ ~ ~ ~
+                    execute at @a run summon minecraft:area_effect_cloud ~ ~ ~ {Tags:['sequence_%1$s', 'sequence_node_player_pos'], Radius:0, Duration:216374}
+                    execute at @a run summon minecraft:area_effect_cloud ~ ~ ~ {Tags:['sequence_%1$s', 'sequence_node_player_looking_at'], Radius:0, Duration:216374}
+                    execute at @a run tp @e[tag=sequence_%1$s, tag=sequence_node_player_looking_at] ^ ^ ^4
                     gamemode spectator @a
                     scoreboard objectives add in_sequence dummy
                     scoreboard players set @a[limit=1] in_sequence 1
-                    function vanilla_cinematics:cinematics/%s/node0""".
-                    formatted(s.getSequenceName(), s.getSequenceName(), s.getSequenceName()));
+                    function vanilla_cinematics:cinematics/%1$s/node0""".
+                    formatted(seqName));
             startMcFuncWriter.close();
 
             // nodes
-            int c = 0;
-            for (; c < s.getCameraNodes().size(); c++) {
-                Node n = s.getCameraNodes().get(c);
-                File nodeMcFuncFile = new File(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\node" + c + ".mcfunction");
+            int nodeIndex = 0;
+            for (; nodeIndex < s.getCameraNodes().size(); nodeIndex++) {
+                Node n = s.getCameraNodes().get(nodeIndex);
+                File nodeMcFuncFile = new File(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + seqName + "\\node" + nodeIndex + ".mcfunction");
                 if (nodeMcFuncFile.createNewFile()) {
-                    LOGGER.info("node " + c + ".mcfunction created");
+                    LOGGER.info("node " + nodeIndex + ".mcfunction created");
                 } else {
-                    LOGGER.info("node" + c + ".mcfunction already exists");
+                    LOGGER.info("node" + nodeIndex + ".mcfunction already exists");
                 }
 
-                FileWriter nodeWriter = new FileWriter(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\node" + c + ".mcfunction");
-                if (c > 0) nodeWriter.write("tag @e[tag=sequence_node_%d] remove current_sequence_node\n".formatted(c - 1));
-                nodeWriter.write("summon minecraft:armor_stand %f %f %f {Rotation:[%ff, %ff], Invisible:1, NoGravity:1, Tags:['sequence_%s', 'sequence_node_%d', 'current_sequence_node']}\n".formatted(n.getStandPos().x, n.getStandPos().y, n.getStandPos().z, n.getYaw(), n.getPitch(), s.getSequenceName(), c));
+                FileWriter nodeWriter = new FileWriter(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + seqName + "\\node" + nodeIndex + ".mcfunction");
+                if (nodeIndex > 0) nodeWriter.write("tag @e[tag=sequence_node_%d] remove current_sequence_node\n".formatted(nodeIndex - 1));
+                nodeWriter.write("summon minecraft:armor_stand %f %f %f {Rotation:[%ff, %ff], Invisible:1, NoGravity:1, Tags:['sequence_%s', 'sequence_node_%d', 'current_sequence_node']}\n".formatted(n.getStandPos().x, n.getStandPos().y, n.getStandPos().z, n.getYaw(), n.getPitch(), seqName, nodeIndex));
                 nodeWriter.write("spectate @e[tag=current_sequence_node, limit=1] @a[limit=1]\n");
                 if (n.getCommand() != null) nodeWriter.write(n.getCommand() + "\n");
-                if (c > 0) nodeWriter.write("kill @e[tag=sequence_%s, tag=sequence_node_%d]\n".formatted(s.getSequenceName(), c - 1));
-                if (c == s.getCameraNodes().size() - 1) {
-                    nodeWriter.write("schedule function vanilla_cinematics:cinematics/%s/preend %dt".formatted(s.getSequenceName(), n.getDelay()));
+                if (nodeIndex > 0) nodeWriter.write("kill @e[tag=sequence_%s, tag=sequence_node_%d]\n".formatted(seqName, nodeIndex - 1));
+                if (nodeIndex == s.getCameraNodes().size() - 1) {
+                    nodeWriter.write("schedule function vanilla_cinematics:cinematics/%s/preend %dt".formatted(seqName, n.getDelay()));
                 } else {
-                    nodeWriter.write("schedule function vanilla_cinematics:cinematics/%s/node%d %dt".formatted(s.getSequenceName(), c + 1, n.getDelay()));
+                    nodeWriter.write("schedule function vanilla_cinematics:cinematics/%s/node%d %dt".formatted(seqName, nodeIndex + 1, n.getDelay()));
                 }
                 nodeWriter.close();
             }
 
-            // preend
-            File preendMcFuncFile = new File(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\preend.mcfunction");
-            if (preendMcFuncFile.createNewFile()) {
-                LOGGER.info("preend.mcfunction created");
-            } else {
-                LOGGER.info("preend.mcfuncton already exist");
-            }
-            FileWriter preendWriter = new FileWriter(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\preend.mcfunction");
-            preendWriter.write(
-                """
-                kill @e[tag=sequence_%s, tag=sequence_node_%d]
-                scoreboard players set @a[limit=1] in_sequence 0
-                spectate @e[tag=sequence_%s, tag=sequence_node_player_pos, limit=1] @a[limit=1]
-                schedule function vanilla_cinematics:cinematics/%s/end 5t""".
-                formatted(s.getSequenceName(), c - 1, s.getSequenceName(), s.getSequenceName()));
-            preendWriter.close();
-
             // end
-            File endMcFuncFile = new File(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\end.mcfunction");
+            File endMcFuncFile = new File(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + seqName + "\\end.mcfunction");
             if (endMcFuncFile.createNewFile()) {
                 LOGGER.info("end.mcfunction created");
             } else {
                 LOGGER.info("end.mcfunction already exist");
             }
-            FileWriter endWriter = new FileWriter(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + s.getSequenceName() + "\\end.mcfunction");
+            FileWriter endWriter = new FileWriter(datapacksPath + "\\VanillaCinematics\\data\\vanilla_cinematics\\functions\\cinematics\\" + seqName + "\\preend.mcfunction");
             endWriter.write(
                 """
+                kill @e[tag=sequence_%1$s, tag=sequence_node_%2$d]
+                scoreboard players set @a[limit=1] in_sequence 0
+                execute at @a run tp @a @e[tag=sequence_%s, tag=sequence_node_player_pos, limit=1]
+                execute at @a run tp @a ~ ~ ~ facing entity @e[tag=sequence_%1$s, tag=sequence_node_player_looking_at, limit=1]
                 gamemode adventure @a
-                kill @e[tag=sequence_%s, tag=sequence_node_player_pos]
-                """.
-                formatted(s.getSequenceName()));
+                kill @e[tag=sequence_%1$s, tag=sequence_node_player_pos]
+                kill @e[tag=sequence_%1$s, tag=sequence_node_player_looking_at]""".
+                formatted(seqName, nodeIndex - 1));
             endWriter.close();
         } catch (IOException e) {
             LOGGER.error("An error occurred while writing new sequence to datapack", e);
