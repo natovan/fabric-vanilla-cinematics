@@ -1,6 +1,5 @@
 package camera_sequence.render;
 
-import camera_sequence.ExampleMod;
 import fi.dy.masa.malilib.interfaces.IRenderer;
 import fi.dy.masa.malilib.render.RenderUtils;
 import net.minecraft.client.MinecraftClient;
@@ -9,13 +8,13 @@ import net.minecraft.util.math.Matrix4f;
 
 import java.awt.*;
 
-public class RenderHandler implements IRenderer {
-    private static final RenderHandler INSTANCE = new RenderHandler();
+public class WorldRenderer implements IRenderer {
+    private static final WorldRenderer INSTANCE = new WorldRenderer();
     private final MinecraftClient mc;
-    public RenderHandler() {
+    public WorldRenderer() {
         this.mc = MinecraftClient.getInstance();
     }
-    public static RenderHandler getInstance() {
+    public static WorldRenderer getInstance() {
         return INSTANCE;
     }
 

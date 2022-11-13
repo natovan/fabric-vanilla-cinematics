@@ -112,8 +112,11 @@ public class CamseqCommand {
 
     private static int addCameraNode(ServerCommandSource source, String cameraSequenceName, int delay, @Nullable String command) {
         if (source.getPlayer() != null) {
-            Vec3d standPos = source.getPlayer().getPos();
-            float armorStandEyeHeight = 1.7f; // ? i actually have no idea
+            // todo: fix this mess
+            final float armorStandEyeHeight = 1.7f; // i don't know actually
+            final double yOffset = 0.198;
+            Vec3d tmpVec = source.getPlayer().getPos();
+            Vec3d standPos = new Vec3d(tmpVec.x, tmpVec.y - yOffset, tmpVec.z);
             Vec3d eyePos = new Vec3d(standPos.x, standPos.y + armorStandEyeHeight, standPos.z);
             float yaw = source.getPlayer().getYaw();
             float pitch = source.getPlayer().getPitch();
@@ -130,7 +133,7 @@ public class CamseqCommand {
             for (NodeSequence s : ExampleMod.sequences) {
                 if (s.getSequenceName().equals(cameraSequenceName)) s.appendCameraNode(node);
             }
-            source.sendFeedback(Text.of("Appended node to " + cameraSequenceName + " at at position: %.2f, %.2f, %.2f".formatted(standPos.x, standPos.y, standPos.z)), false);
+            source.sendFeedback(Text.of("Appended node to " + cameraSequenceName + " at position: %.2f, %.2f, %.2f".formatted(standPos.x, standPos.y, standPos.z)), false);
         }
         return 1;
     }

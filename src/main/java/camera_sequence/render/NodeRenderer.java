@@ -19,8 +19,9 @@ public class NodeRenderer {
     public static final NodeRenderer INSTANCE = new NodeRenderer();
     private static final Identifier TEXTURE = new Identifier("modid", "textures/misc/camera.png");
     private final MinecraftClient mc;
-    private final RenderObject spriteObject, lineObject;
     public boolean shouldRender = true;
+    private final RenderObject spriteObject, lineObject;
+    private final List<String> strings = new ArrayList<>();
 
     public NodeRenderer() {
         this.mc = MinecraftClient.getInstance();
@@ -40,6 +41,7 @@ public class NodeRenderer {
     public void render(MatrixStack matrixStack, Matrix4f projMatrix) {
         if (!this.shouldRender) return;
         Camera c = this.mc.gameRenderer.getCamera();
+        BufferBuilder bb = Tessellator.getInstance().getBuffer();
 
         RenderSystem.disableCull();
         RenderSystem.depthMask(true);
@@ -68,14 +70,13 @@ public class NodeRenderer {
                 RenderUtils.color(1.0f, 1.0f, 1.0f, 1.0f);
 
 
-                // Drawing lines in between. Good for now
+                // Drawing lines in between
                 // TODO: bb on update
 
                 if (i + 1 < nodes.size()) {
                     Vec3d p1 = n.getEyePos();
                     Vec3d p2 = nodes.get(i + 1).getEyePos();
 
-                    BufferBuilder bb = Tessellator.getInstance().getBuffer();
                     bb.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
                     bb.vertex(p1.x, p1.y, p1.z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
                     bb.vertex(p2.x, p2.y, p2.z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
@@ -91,15 +92,17 @@ public class NodeRenderer {
 
                 // Drawing floating text
 
-                List<String> strings = new ArrayList<>();
-                strings.add(seq.getSequenceName() + " #" + i);
-                strings.add("Delay: " + n.getDelay());
-                if (n.getCommand() != null) strings.add(n.getCommand());
-                RenderUtils.drawTextPlate(strings, n.getEyePos().x, n.getEyePos().y + 0.8, n.getEyePos().z, 0.01f);
-                strings.clear();
+                final double textRenderDist = 10;
+                if (c.getPos().distanceTo(n.getEyePos()) < textRenderDist) {
+                    this.strings.add(seq.getSequenceName() + " #" + i);
+                    this.strings.add("Delay: " + n.getDelay());
+                    if (n.getCommand() != null) strings.add(n.getCommand());
+                    RenderUtils.drawTextPlate(strings, n.getEyePos().x, n.getEyePos().y + 0.8, n.getEyePos().z, 0.01f);
+                    this.strings.clear();
+                }
 
-                RenderSystem.disableCull();
-                RenderSystem.depthMask(true);
+                RenderSystem.enableCull();
+                RenderSystem.depthMask(false);
             }
         }
     }
