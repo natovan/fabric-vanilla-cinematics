@@ -52,6 +52,24 @@ public class CamseqCommand {
                 then(literal("render").
                         then(argument("should_render", bool()).
                                 executes((c) -> render(c.getSource(), getBool(c, "should_render"))))));
+	dispatcher.register(literal("c").
+			then(argument("scene name", word()).
+				then(argument("node index", integer()).
+					then(argument("delay", integer()).
+						executes((c) -> editNodeDelay(
+								c.getSource(),
+								getString(c, "scene name"),
+								getInteger(c, "node index"),
+								getInteger(c, "delay")))))));
+    }
+
+    private static int editNodeDelay(ServerCommandSource source, String sceneName, int nodeIndex, int delay) {
+	for (NodeSequence seq : ExampleMod.sequences) {
+		if (seq.getSequenceName().equals(sceneName)) {
+			source.sendFeedback(Text.of("Found scene " + sceneName + " " + nodeIndex + " " + delay), false);
+		}
+	}
+	return 1;
     }
 
     private static int render(ServerCommandSource source, boolean shouldRender) {
