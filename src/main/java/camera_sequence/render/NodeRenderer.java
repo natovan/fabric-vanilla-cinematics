@@ -43,9 +43,6 @@ public class NodeRenderer {
         Camera c = this.mc.gameRenderer.getCamera();
         BufferBuilder bb = Tessellator.getInstance().getBuffer();
 
-        RenderSystem.disableCull();
-        RenderSystem.depthMask(true);
-
         float viewDist = this.mc.gameRenderer.getViewDistance();
         for (NodeSequence seq : ExampleMod.sequences) {
             ArrayList<Node> nodes = seq.getCameraNodes();
@@ -53,6 +50,7 @@ public class NodeRenderer {
 
 
                 // Drawing sprites
+                RenderSystem.disableCull();
                 RenderUtils.setupBlend();
                 RenderUtils.color(1.0f, 1.0f, 1.0f, 0.45f);
                 Node n = nodes.get(i);
@@ -100,9 +98,6 @@ public class NodeRenderer {
                     RenderUtils.drawTextPlate(strings, n.getEyePos().x, n.getEyePos().y + 0.8, n.getEyePos().z, 0.01f);
                     this.strings.clear();
                 }
-
-                RenderSystem.enableCull();
-                RenderSystem.depthMask(false);
             }
         }
     }
