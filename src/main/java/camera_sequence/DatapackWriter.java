@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+// todo: write to tmp files first
 public class DatapackWriter {
     private static final Logger LOGGER = LogUtils.getLogger();
     public static final DatapackWriter INSTANCE = new DatapackWriter();

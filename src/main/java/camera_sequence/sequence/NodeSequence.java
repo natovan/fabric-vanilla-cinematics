@@ -7,7 +7,7 @@ import com.google.gson.JsonPrimitive;
 import java.util.ArrayList;
 
 public class NodeSequence {
-    private final String sequenceName;
+    private String sequenceName;
     private final ArrayList<Node> cameraNodes;
 
     public NodeSequence(String name) {
@@ -36,6 +36,10 @@ public class NodeSequence {
 
     public String getSequenceName() {
         return sequenceName;
+    }
+
+    public void setName(String name) {
+	this.sequenceName = name;
     }
 
     public JsonObject toJson() {

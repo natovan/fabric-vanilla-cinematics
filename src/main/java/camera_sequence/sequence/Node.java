@@ -4,18 +4,20 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import fi.dy.masa.malilib.util.JsonUtils;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec2f;
 
 import javax.annotation.Nullable;
 
 public class Node {
-    private final Vec3d standPos;
-    private final Vec3d eyePos;
-    private final float yaw;
-    private final float pitch;
-    private final int delay; // in ticks
+    private Vec3d standPos;
+    private Vec3d eyePos;
+    private float yaw;
+    private float pitch;
+    private int delay; // in ticks
     private String command;
 
     public Node(Vec3d pos, Vec3d eyePos, float yaw, float pitch, int delay, @Nullable String command) {
+        // todo: refactor this, generate eye pos and stand pos here instead of out of the class
         this.standPos   = pos;
         this.eyePos     = eyePos;
         this.yaw        = yaw;
@@ -38,12 +40,28 @@ public class Node {
     public @Nullable String getCommand() {
         return this.command;
     }
+
+    public void setCommand(String command) {
+	this.command = command;
+    }
     public Vec3d getStandPos() {
         return this.standPos;
     }
 
     public Vec3d getEyePos() {
         return this.eyePos;
+    }
+
+    public void setPos(Vec3d pos) {
+	final float armorStandEyeHeight = 1.7f; // i don't know actually
+	final double yOffset = 0.198; 		// i don't know this eather
+	this.standPos = new Vec3d(pos.x, pos.y - yOffset, pos.z);
+	this.eyePos = new Vec3d(pos.x, pos.y + armorStandEyeHeight, pos.z);
+    }
+
+    public void setRotation(Vec2f rotation) {
+	this.yaw = rotation.x;
+	this.pitch = rotation.y;
     }
 
     public float getYaw() {
@@ -56,6 +74,10 @@ public class Node {
 
     public int getDelay() {
         return delay;
+    }
+
+    public void setDelay(int delay) {
+	this.delay = delay;
     }
 
     public JsonObject toJson() {
