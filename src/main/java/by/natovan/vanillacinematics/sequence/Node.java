@@ -9,6 +9,8 @@ import net.minecraft.util.math.Vec2f;
 import javax.annotation.Nullable;
 
 public class Node {
+
+    public boolean isWritten = false;
     private Vec3d standPos;
     private Vec3d eyePos;
     private float yaw;
@@ -24,6 +26,7 @@ public class Node {
         this.pitch      = pitch;
         this.delay      = delay;
         this.command    = command;
+        this.isWritten  = false;
     }
 
     public Node(JsonObject object) {
@@ -42,7 +45,8 @@ public class Node {
     }
 
     public void setCommand(String command) {
-	this.command = command;
+        this.isWritten = false;
+        this.command = command;
     }
     public Vec3d getStandPos() {
         return this.standPos;
@@ -53,15 +57,17 @@ public class Node {
     }
 
     public void setPos(Vec3d pos) {
-	final float armorStandEyeHeight = 1.7f; // i don't know actually
-	final double yOffset = 0.198; 		// i don't know this eather
-	this.standPos = new Vec3d(pos.x, pos.y - yOffset, pos.z);
-	this.eyePos = new Vec3d(pos.x, pos.y + armorStandEyeHeight, pos.z);
+        final float armorStandEyeHeight = 1.7f; // i don't know actually
+        final double yOffset = 0.198; 		// i don't know this eather
+        this.standPos = new Vec3d(pos.x, pos.y - yOffset, pos.z);
+        this.eyePos = new Vec3d(pos.x, pos.y + armorStandEyeHeight, pos.z);
+        this.isWritten = false;
     }
 
     public void setRotation(Vec2f rotation) {
-	this.yaw = rotation.x;
-	this.pitch = rotation.y;
+        this.yaw = rotation.x;
+        this.pitch = rotation.y;
+        this.isWritten = false;
     }
 
     public float getYaw() {
@@ -77,7 +83,8 @@ public class Node {
     }
 
     public void setDelay(int delay) {
-	this.delay = delay;
+        this.delay = delay;
+        this.isWritten = false;
     }
 
     public JsonObject toJson() {

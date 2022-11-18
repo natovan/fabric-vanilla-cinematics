@@ -52,8 +52,9 @@ public class NodeRenderer {
                 // Drawing sprites
                 RenderSystem.disableCull();
                 RenderUtils.setupBlend();
-                RenderUtils.color(1.0f, 1.0f, 1.0f, 0.45f);
+                RenderUtils.color(1.0f, 1.0f, 1.0f, 0.60f);
                 Node n = nodes.get(i);
+                if (!n.isWritten) RenderUtils.color(1.0f, 1.0f, 1.0f, 0.30f);
                 if (c.getPos().distanceTo(n.getStandPos()) > viewDist) continue;
                 matrixStack.push();
                 matrixStack.translate(
@@ -74,10 +75,12 @@ public class NodeRenderer {
                 if (i + 1 < nodes.size()) {
                     Vec3d p1 = n.getEyePos();
                     Vec3d p2 = nodes.get(i + 1).getEyePos();
+                    float alpha = 1.0f;
+                    if (!nodes.get(i + 1).isWritten) alpha = 0.4f;
 
                     bb.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
-                    bb.vertex(p1.x, p1.y, p1.z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-                    bb.vertex(p2.x, p2.y, p2.z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
+                    bb.vertex(p1.x, p1.y, p1.z).color(1.0f, 1.0f, 1.0f, alpha).next();
+                    bb.vertex(p2.x, p2.y, p2.z).color(1.0f, 1.0f, 1.0f, alpha).next();
                     this.lineObject.uploadData(bb);
                     bb.clear();
 
@@ -95,7 +98,10 @@ public class NodeRenderer {
                     this.strings.add(seq.getSequenceName() + " #" + i);
                     this.strings.add("Delay: " + n.getDelay());
                     if (n.getCommand() != null) strings.add(n.getCommand());
+                    if (!n.isWritten) this.strings.add("<unwritten>");
+                    RenderUtils.color(1.0f, 1.0f, 1.0f, 1.0f);
                     RenderUtils.drawTextPlate(strings, n.getEyePos().x, n.getEyePos().y + 0.8, n.getEyePos().z, 0.01f);
+                    RenderUtils.color(1.0f, 1.0f, 1.0f, 1.0f);
                     this.strings.clear();
                 }
             }

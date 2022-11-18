@@ -57,7 +57,7 @@ public class SequenceCommand {
                                                                         getInteger(c, "delay"),
                                                                         getVec3(c, "pos"),
                                                                         getVec2(c, "rotation"),
-                                                                        getString(c, "function")))))))).
+                                                                        getString(c, "function")))))).
                         then(argument("index", integer()).
                                 then(literal("delay").
                                         then(argument("delay", integer()).
@@ -86,7 +86,7 @@ public class SequenceCommand {
                                                         c.getSource(),
                                                         getString(c, "id"),
                                                         getInteger(c, "index"),
-                                                        getString(c, "string")))))).
+                                                        getString(c, "command")))))).
                         then(literal("name").
                                 then(argument("name", word()).
                                         executes((c) -> nameCommand(
@@ -96,7 +96,7 @@ public class SequenceCommand {
                         then(literal("delete").
                                 executes((c) -> deleteCommand(
                                         c.getSource(),
-                                        getString(c, "id"))))));
+                                        getString(c, "id"))))))));
     }
 
     private static int newCommand(ServerCommandSource source, String id) {
@@ -256,18 +256,20 @@ public class SequenceCommand {
         for (NodeSequence s : VanillaCinematics.sequences) {
             if (DatapackWriter.INSTANCE.writeSequence(s) == 1) {
                 VanillaCinematics.sendMessage(source, "Wrote " + s.getSequenceName() + " to the datapack");
+                s.markAsWritten();
             } else {
                 VanillaCinematics.sendMessage(source, "Error occurred while writing to the datapack");
+                return 1;
             }
         }
         if (DataStorage.INSTANCE.write() == 1) {
             VanillaCinematics.sendMessage(source, "Wrote to sequences.json");
         } else {
             VanillaCinematics.sendMessage(source, "Error while writing to sequences.json");
+            return 1;
         }
 
-        CommandManager manager = source.getServer().getCommandManager();
-        manager.executeWithPrefix(source, "/reload");
+        source.getServer().getCommandManager().executeWithPrefix(source, "/reload");
         return 1;
     }
 }

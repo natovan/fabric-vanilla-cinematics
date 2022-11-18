@@ -22,7 +22,9 @@ public class NodeSequence {
         JsonArray nodes = object.get("nodes").getAsJsonArray();
         for (Object o : nodes) {
             JsonObject nodeObj = (JsonObject) o;
-            this.appendCameraNode(new Node(nodeObj));
+            Node n = new Node(nodeObj);
+            n.isWritten = true;
+            this.appendCameraNode(n);
         }
     }
 
@@ -40,6 +42,10 @@ public class NodeSequence {
 
     public void setName(String name) {
 	this.sequenceName = name;
+    }
+
+    public void markAsWritten() {
+        for (Node n : this.cameraNodes) { n.isWritten = true; }
     }
 
     public JsonObject toJson() {
