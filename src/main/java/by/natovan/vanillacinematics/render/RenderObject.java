@@ -1,4 +1,4 @@
-package camera_sequence.render;
+package by.natovan.vanillacinematics.render;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gl.VertexBuffer;

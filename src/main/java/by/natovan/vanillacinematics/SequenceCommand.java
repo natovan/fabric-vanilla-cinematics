@@ -1,8 +1,8 @@
-package camera_sequence;
+package by.natovan.vanillacinematics;
 
-import camera_sequence.render.NodeRenderer;
-import camera_sequence.sequence.Node;
-import camera_sequence.sequence.NodeSequence;
+import by.natovan.vanillacinematics.sequence.Node;
+import by.natovan.vanillacinematics.sequence.NodeSequence;
+import by.natovan.vanillacinematics.render.NodeRenderer;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
 import net.minecraft.server.command.CommandManager;
@@ -102,109 +102,109 @@ public class SequenceCommand {
     private static int newCommand(ServerCommandSource source, String id) {
         for (int i = 0; i < id.length(); i++) {
             if (Character.isUpperCase(id.charAt(i))) {
-                ExampleMod.sendMessage(source, "Scene id can't contain uppercase letters");
+                VanillaCinematics.sendMessage(source, "Scene id can't contain uppercase letters");
                 return 1;
             }
         }
         NodeSequence node = new NodeSequence(id);
-        ExampleMod.sequences.add(node);
-        ExampleMod.sendMessage(source, "Scene %s created".formatted(id));
+        VanillaCinematics.sequences.add(node);
+        VanillaCinematics.sendMessage(source, "Scene %s created".formatted(id));
         return 1;
     }
 
     private static int delayCommand(ServerCommandSource source, String id, int index, int delay) {
-        for (NodeSequence seq : ExampleMod.sequences) {
+        for (NodeSequence seq : VanillaCinematics.sequences) {
             if (seq.getSequenceName().equals(id)) {
                 if (seq.getCameraNodes().size() - 1 >= index) {
                     seq.getCameraNodes().get(index).setDelay(delay);
-                    ExampleMod.sendMessage(source, "Set delay of %s at node #%d to %d".formatted(id, index, delay));
+                    VanillaCinematics.sendMessage(source, "Set delay of %s at node #%d to %d".formatted(id, index, delay));
                 } else {
-                    ExampleMod.sendMessage(source, "Node of index #%d at %s was not found".formatted(index, id));
+                    VanillaCinematics.sendMessage(source, "Node of index #%d at %s was not found".formatted(index, id));
                 }
                 return 1;
             }
         }
-        ExampleMod.sendMessage(source, "No sequence and/or node was found");
+        VanillaCinematics.sendMessage(source, "No sequence and/or node was found");
         return 1;
     }
 
     private static int posCommand(ServerCommandSource source, String id, int index, Vec3d pos) {
-        for (NodeSequence seq : ExampleMod.sequences) {
+        for (NodeSequence seq : VanillaCinematics.sequences) {
             if (seq.getSequenceName().equals(id)) {
                 if (seq.getCameraNodes().size() - 1 >= index) {
                     seq.getCameraNodes().get(index).setPos(pos);
-                    ExampleMod.sendMessage(source, "Set position of %s at node #%d to %f, %f, %f".formatted(id, index, pos.x, pos.y, pos.z));
+                    VanillaCinematics.sendMessage(source, "Set position of %s at node #%d to %f, %f, %f".formatted(id, index, pos.x, pos.y, pos.z));
                 } else {
-                    ExampleMod.sendMessage(source, "Node of index #%d at %s was not found".formatted(index, id));
+                    VanillaCinematics.sendMessage(source, "Node of index #%d at %s was not found".formatted(index, id));
                 }
                 return 1;
             }
         }
-        ExampleMod.sendMessage(source, "No sequence and/or node was found");
+        VanillaCinematics.sendMessage(source, "No sequence and/or node was found");
         return 1;
     }
 
     private static int rotationCommand(ServerCommandSource source, String id, int index, Vec2f rotation) {
-        for (NodeSequence seq : ExampleMod.sequences) {
+        for (NodeSequence seq : VanillaCinematics.sequences) {
             if (seq.getSequenceName().equals(id)) {
                 if (seq.getCameraNodes().size() - 1 >= index) {
                     seq.getCameraNodes().get(index).setRotation(rotation);
-                    ExampleMod.sendMessage(source, "Set rotation of %s at node #%d to %f, %f".formatted(id, index, rotation.x, rotation.y));
+                    VanillaCinematics.sendMessage(source, "Set rotation of %s at node #%d to %f, %f".formatted(id, index, rotation.x, rotation.y));
                 } else {
-                    ExampleMod.sendMessage(source, "Node of index #%d at %s was not found".formatted(index, id));
+                    VanillaCinematics.sendMessage(source, "Node of index #%d at %s was not found".formatted(index, id));
                 }
                 return 1;
             }
         }
-        ExampleMod.sendMessage(source, "No sequence and/or node was found");
+        VanillaCinematics.sendMessage(source, "No sequence and/or node was found");
         return 1;
     }
 
     private static int commandCommand(ServerCommandSource source, String id, int index, String command) {
-        for (NodeSequence seq : ExampleMod.sequences) {
+        for (NodeSequence seq : VanillaCinematics.sequences) {
             if (seq.getSequenceName().equals(id)) {
                 if (seq.getCameraNodes().size() - 1 >= index) {
                     seq.getCameraNodes().get(index).setCommand(command);
-                    ExampleMod.sendMessage(source, "Set command of %s at node #%d to \"%s\"".formatted(id, index, command));
+                    VanillaCinematics.sendMessage(source, "Set command of %s at node #%d to \"%s\"".formatted(id, index, command));
                 } else {
-                    ExampleMod.sendMessage(source, "Node of index #%d at %s was not found".formatted(index, id));
+                    VanillaCinematics.sendMessage(source, "Node of index #%d at %s was not found".formatted(index, id));
                 }
                 return 1;
             }
         }
-        ExampleMod.sendMessage(source, "No sequence and/or node was found");
+        VanillaCinematics.sendMessage(source, "No sequence and/or node was found");
         return 1;
     }
 
     private static int nameCommand(ServerCommandSource source, String id, String name) {
-        for (NodeSequence seq : ExampleMod.sequences) {
+        for (NodeSequence seq : VanillaCinematics.sequences) {
             if (seq.getSequenceName().equals(id)) {
                 seq.setName(name);
-                ExampleMod.sendMessage(source, "Changed name from '%s' to '%s'".formatted(id, name));
+                VanillaCinematics.sendMessage(source, "Changed name from '%s' to '%s'".formatted(id, name));
                 return 1;
             }
         }
-        ExampleMod.sendMessage(source, "No sequence was found");
+        VanillaCinematics.sendMessage(source, "No sequence was found");
         return 1;
     }
 
     private static int deleteCommand(ServerCommandSource source, String id) {
         int i = 0;
-        for (NodeSequence seq : ExampleMod.sequences) {
+        for (NodeSequence seq : VanillaCinematics.sequences) {
             if (seq.getSequenceName().equals(id)) {
-                ExampleMod.sequences.remove(i);
+                VanillaCinematics.sequences.remove(i);
                 return 1;
             }
             i++;
         }
-        ExampleMod.sendMessage(source, "No sequence was found");
+        VanillaCinematics.sendMessage(source, "No sequence was found");
         return 1;
     }
 
     private static int appendCommand(ServerCommandSource source, String id, int delay, Vec3d pos, Vec2f rotation, @Nullable String function) {
         if (source.getPlayer() == null) return 0;
 
-        for (NodeSequence seq : ExampleMod.sequences) {
+        for (NodeSequence seq : VanillaCinematics.sequences) {
             if (seq.getSequenceName().equals(id)) {
                 // todo: encrease precision here
                 final float armorStandEyeHeight = 1.7f; // i don't know actually
@@ -216,36 +216,36 @@ public class SequenceCommand {
                     CommandDispatcher<ServerCommandSource> dispatcher = source.getServer().getCommandManager().getDispatcher();
                     ParseResults<ServerCommandSource> results = dispatcher.parse(function, source);
                     if (results.getReader().canRead()) {
-                        ExampleMod.sendMessage(source, "Invalid command \"" + function + "\"");
+                        VanillaCinematics.sendMessage(source, "Invalid command \"" + function + "\"");
                         return 1;
                     }
                 }
 
                 seq.appendCameraNode(new Node(standPos, eyePos, rotation.x, rotation.y, delay, function));
-                ExampleMod.sendMessage(source, "Appended node to %s at position: %.2f, %.2f, %.2f".formatted(id, pos.x, pos.y, pos.z));
+                VanillaCinematics.sendMessage(source, "Appended node to %s at position: %.2f, %.2f, %.2f".formatted(id, pos.x, pos.y, pos.z));
                 return 1;
             }
         }
-        ExampleMod.sendMessage(source, "No sequence %s was found".formatted(id));
+        VanillaCinematics.sendMessage(source, "No sequence %s was found".formatted(id));
         return 1;
     }
 
     private static int render(ServerCommandSource source, boolean shouldRender) {
         NodeRenderer.INSTANCE.shouldRender = shouldRender;
         if (shouldRender) {
-            ExampleMod.sendMessage(source, "Rendering nodes: enabled");
+            VanillaCinematics.sendMessage(source, "Rendering nodes: enabled");
         } else {
-            ExampleMod.sendMessage(source, "Rendering nodes: disabled");
+            VanillaCinematics.sendMessage(source, "Rendering nodes: disabled");
         }
         return 1;
     }
 
     private static int load(ServerCommandSource source) {
-        ExampleMod.sequences.clear();
+        VanillaCinematics.sequences.clear();
         if (DataStorage.INSTANCE.load() == 1) {
-            ExampleMod.sendMessage(source, "Loaded from sequences.json");
+            VanillaCinematics.sendMessage(source, "Loaded from sequences.json");
         } else {
-            ExampleMod.sendMessage(source, "Error while loading from sequences.json");
+            VanillaCinematics.sendMessage(source, "Error while loading from sequences.json");
         }
         CommandManager manager = source.getServer().getCommandManager();
         manager.executeWithPrefix(source, "/reload");
@@ -253,17 +253,17 @@ public class SequenceCommand {
     }
 
     private static int write(ServerCommandSource source) {
-        for (NodeSequence s : ExampleMod.sequences) {
+        for (NodeSequence s : VanillaCinematics.sequences) {
             if (DatapackWriter.INSTANCE.writeSequence(s) == 1) {
-                ExampleMod.sendMessage(source, "Wrote " + s.getSequenceName() + " to the datapack");
+                VanillaCinematics.sendMessage(source, "Wrote " + s.getSequenceName() + " to the datapack");
             } else {
-                ExampleMod.sendMessage(source, "Error occurred while writing to the datapack");
+                VanillaCinematics.sendMessage(source, "Error occurred while writing to the datapack");
             }
         }
         if (DataStorage.INSTANCE.write() == 1) {
-            ExampleMod.sendMessage(source, "Wrote to sequences.json");
+            VanillaCinematics.sendMessage(source, "Wrote to sequences.json");
         } else {
-            ExampleMod.sendMessage(source, "Error while writing to sequences.json");
+            VanillaCinematics.sendMessage(source, "Error while writing to sequences.json");
         }
 
         CommandManager manager = source.getServer().getCommandManager();

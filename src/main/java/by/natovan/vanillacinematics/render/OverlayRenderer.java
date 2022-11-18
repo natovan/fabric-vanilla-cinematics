@@ -1,10 +1,8 @@
-package camera_sequence.render;
+package by.natovan.vanillacinematics.render;
 
 import fi.dy.masa.malilib.interfaces.IRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.math.MatrixStack;
-
-import java.awt.*;
 
 public class OverlayRenderer implements IRenderer {
     public static final OverlayRenderer INSTANCE = new OverlayRenderer();

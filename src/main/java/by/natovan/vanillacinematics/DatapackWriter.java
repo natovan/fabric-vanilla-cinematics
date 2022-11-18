@@ -1,7 +1,7 @@
-package camera_sequence;
+package by.natovan.vanillacinematics;
 
-import camera_sequence.sequence.Node;
-import camera_sequence.sequence.NodeSequence;
+import by.natovan.vanillacinematics.sequence.Node;
+import by.natovan.vanillacinematics.sequence.NodeSequence;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.server.MinecraftServer;

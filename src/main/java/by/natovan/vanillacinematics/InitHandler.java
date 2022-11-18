@@ -1,7 +1,7 @@
-package camera_sequence;
+package by.natovan.vanillacinematics;
 
-import camera_sequence.render.OverlayRenderer;
-import camera_sequence.render.WorldRenderer;
+import by.natovan.vanillacinematics.render.OverlayRenderer;
+import by.natovan.vanillacinematics.render.WorldRenderer;
 import fi.dy.masa.malilib.event.RenderEventHandler;
 import fi.dy.masa.malilib.interfaces.IInitializationHandler;
 

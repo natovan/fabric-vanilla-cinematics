@@ -1,4 +1,4 @@
-package camera_sequence.render;
+package by.natovan.vanillacinematics.render;
 
 import fi.dy.masa.malilib.interfaces.IRenderer;
 import fi.dy.masa.malilib.render.RenderUtils;

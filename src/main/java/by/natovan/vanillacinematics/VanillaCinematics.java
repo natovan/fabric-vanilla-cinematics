@@ -1,7 +1,7 @@
-package camera_sequence;
+package by.natovan.vanillacinematics;
 
-import camera_sequence.render.NodeRenderer;
-import camera_sequence.sequence.NodeSequence;
+import by.natovan.vanillacinematics.sequence.NodeSequence;
+import by.natovan.vanillacinematics.render.NodeRenderer;
 import com.mojang.logging.LogUtils;
 import fi.dy.masa.malilib.event.InitializationHandler;
 import net.fabricmc.api.ModInitializer;
@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class ExampleMod implements ModInitializer {
+public class VanillaCinematics implements ModInitializer {
     public static final Logger LOGGER = LogUtils.getLogger();
     public static List<NodeSequence> sequences = new ArrayList<>();
 

@@ -1,8 +1,8 @@
-package camera_sequence.render;
+package by.natovan.vanillacinematics.render;
 
-import camera_sequence.ExampleMod;
-import camera_sequence.sequence.Node;
-import camera_sequence.sequence.NodeSequence;
+import by.natovan.vanillacinematics.VanillaCinematics;
+import by.natovan.vanillacinematics.sequence.Node;
+import by.natovan.vanillacinematics.sequence.NodeSequence;
 import com.mojang.blaze3d.systems.RenderSystem;
 import fi.dy.masa.malilib.render.RenderUtils;
 import net.minecraft.client.MinecraftClient;
@@ -44,7 +44,7 @@ public class NodeRenderer {
         BufferBuilder bb = Tessellator.getInstance().getBuffer();
 
         float viewDist = this.mc.gameRenderer.getViewDistance();
-        for (NodeSequence seq : ExampleMod.sequences) {
+        for (NodeSequence seq : VanillaCinematics.sequences) {
             ArrayList<Node> nodes = seq.getCameraNodes();
             for (int i = 0; i < nodes.size(); i++) {
 

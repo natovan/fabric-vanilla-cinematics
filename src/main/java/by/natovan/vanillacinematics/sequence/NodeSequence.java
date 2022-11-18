@@ -1,4 +1,4 @@
-package camera_sequence.sequence;
+package by.natovan.vanillacinematics.sequence;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

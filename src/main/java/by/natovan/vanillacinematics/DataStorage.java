@@ -1,7 +1,7 @@
-package camera_sequence;
+package by.natovan.vanillacinematics;
 
 
-import camera_sequence.sequence.NodeSequence;
+import by.natovan.vanillacinematics.sequence.NodeSequence;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -36,7 +36,7 @@ public class DataStorage {
             JsonObject root = new JsonObject();
             JsonArray sequences = new JsonArray();
 
-            for (NodeSequence seq : ExampleMod.sequences) {
+            for (NodeSequence seq : VanillaCinematics.sequences) {
                 sequences.add(seq.toJson());
             }
             root.add("sequences", sequences);
@@ -64,9 +64,9 @@ public class DataStorage {
         if (element != null) {
             JsonObject object = element.getAsJsonObject();
             JsonArray sequences = object.get("sequences").getAsJsonArray();
-            ExampleMod.sequences.clear();
+            VanillaCinematics.sequences.clear();
             for (JsonElement e : sequences) {
-                ExampleMod.sequences.add(new NodeSequence(e.getAsJsonObject()));
+                VanillaCinematics.sequences.add(new NodeSequence(e.getAsJsonObject()));
             }
             LOGGER.info("Successfully read from sequences.json");
             return 1;
