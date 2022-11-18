@@ -17,6 +17,7 @@ import java.util.Locale;
 
 public class VanillaCinematics implements ModInitializer {
     public static final Logger LOGGER = LogUtils.getLogger();
+    public static final String MODID = "vanillacinematics";
     public static List<NodeSequence> sequences = new ArrayList<>();
 
     @Override

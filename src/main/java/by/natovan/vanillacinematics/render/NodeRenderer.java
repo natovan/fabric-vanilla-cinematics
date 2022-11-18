@@ -17,7 +17,7 @@ import java.util.List;
 
 public class NodeRenderer {
     public static final NodeRenderer INSTANCE = new NodeRenderer();
-    private static final Identifier TEXTURE = new Identifier("modid", "textures/misc/camera.png");
+    private static final Identifier TEXTURE = new Identifier(VanillaCinematics.MODID, "textures/misc/camera.png");
     private final MinecraftClient mc;
     public boolean shouldRender = true;
     private final RenderObject spriteObject, lineObject;
