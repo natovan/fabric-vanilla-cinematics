@@ -32,6 +32,10 @@ public class NodeSequence {
         cameraNodes.add(node);
     }
 
+    public void deleteCameraNode(int index) {
+        this.cameraNodes.remove(index);
+    }
+
     public ArrayList<Node> getCameraNodes() {
         return cameraNodes;
     }

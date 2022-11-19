@@ -27,16 +27,33 @@ public class SequenceCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher)
     {
         dispatcher.register(literal("sequence").
+                then(literal("data").
+                        then(literal("load").
+                                executes((c) -> load(c.getSource()))).
+                        then(literal("delete").
+                                executes((c) -> delete(c.getSource()))).
+                        then(literal("write").
+                                executes((c) -> write(c.getSource())))).
                 then(literal("render").
                         then(argument("render", bool()).
-                                executes((c) -> render(c.getSource(), getBool(c, "render"))))).
-                then(literal("load").
-                        executes((c) -> load(c.getSource()))).
-                then(literal("write").
-                        executes((c) -> write(c.getSource()))).
+                                executes((c) -> render(
+                                        c.getSource(),
+                                        getBool(c, "render"))))).
                 then(literal("new").
                         then(argument("name", word()).
-                                executes((c) -> newCommand(c.getSource(), getString(c, "name"))))).
+                                executes((c) -> newCommand(
+                                        c.getSource(),
+                                        getString(c, "name"))))).
+                then(literal("delete").
+                        then(argument("id", word()).
+                                executes((c) -> deleteSequence(
+                                        c.getSource(),
+                                        getString(c, "id"))).
+                                then(argument("index", integer()).
+                                        executes((c) -> deleteNode(
+                                                c.getSource(),
+                                                getString(c, "id"),
+                                                getInteger(c, "index")))))).
                 then(argument("id", word()).
                         then(literal("append").
                                 then(argument("delay", integer()).
@@ -98,6 +115,41 @@ public class SequenceCommand {
                                         getString(c, "id"))))));
     }
 
+    private static int deleteNode(ServerCommandSource source, String id, int index) {
+        for (NodeSequence seq : VanillaCinematics.sequences) {
+            if (seq.getSequenceName().equals(id)) {
+                if (seq.getCameraNodes().size() - 1 >= index) {
+                    seq.getCameraNodes().remove(index);
+                    VanillaCinematics.sendMessage(source, "Deleted node #%d from sequence '%s'".formatted(index, id));
+                } else {
+                    VanillaCinematics.sendMessage(source, "Node of index #%d at %s was not found".formatted(index, id));
+                }
+                return 1;
+            }
+        }
+        VanillaCinematics.sendMessage(source, "No sequence and/or node was found");
+        return 1;
+    }
+
+    private static int deleteSequence(ServerCommandSource source, String id) {
+        for (NodeSequence seq : VanillaCinematics.sequences) {
+            if (seq.getSequenceName().equals(id)) {
+                VanillaCinematics.sequences.remove(seq);
+                VanillaCinematics.sendMessage(source, "Deleted node sequence '%s'".formatted(id));
+                return 1;
+            }
+        }
+        VanillaCinematics.sendMessage(source, "No sequence and/or node was found");
+        return 1;
+    }
+
+    private static int delete(ServerCommandSource source) {
+        DataStorage.INSTANCE.deleteData();
+        DatapackWriter.INSTANCE.deleteDatapack();
+        VanillaCinematics.sendMessage(source, "Deleted all data");
+        return 1;
+    }
+
     private static int newCommand(ServerCommandSource source, String id) {
         for (int i = 0; i < id.length(); i++) {
             if (Character.isUpperCase(id.charAt(i))) {
@@ -132,7 +184,8 @@ public class SequenceCommand {
             if (seq.getSequenceName().equals(id)) {
                 if (seq.getCameraNodes().size() - 1 >= index) {
                     seq.getCameraNodes().get(index).setPos(pos);
-                    VanillaCinematics.sendMessage(source, "Set position of %s at node #%d to %f, %f, %f".formatted(id, index, pos.x, pos.y, pos.z));
+                    VanillaCinematics.sendMessage(source, "Set position of %s at node #%d to %f, %f, %f".
+                            formatted(id, index, pos.x, pos.y, pos.z));
                 } else {
                     VanillaCinematics.sendMessage(source, "Node of index #%d at %s was not found".formatted(index, id));
                 }
@@ -148,7 +201,8 @@ public class SequenceCommand {
             if (seq.getSequenceName().equals(id)) {
                 if (seq.getCameraNodes().size() - 1 >= index) {
                     seq.getCameraNodes().get(index).setRotation(rotation);
-                    VanillaCinematics.sendMessage(source, "Set rotation of %s at node #%d to %f, %f".formatted(id, index, rotation.x, rotation.y));
+                    VanillaCinematics.sendMessage(source, "Set rotation of %s at node #%d to %f, %f".
+                            formatted(id, index, rotation.x, rotation.y));
                 } else {
                     VanillaCinematics.sendMessage(source, "Node of index #%d at %s was not found".formatted(index, id));
                 }
@@ -164,7 +218,8 @@ public class SequenceCommand {
             if (seq.getSequenceName().equals(id)) {
                 if (seq.getCameraNodes().size() - 1 >= index) {
                     seq.getCameraNodes().get(index).setCommand(command);
-                    VanillaCinematics.sendMessage(source, "Set command of %s at node #%d to \"%s\"".formatted(id, index, command));
+                    VanillaCinematics.sendMessage(source, "Set command of %s at node #%d to \"%s\"".
+                            formatted(id, index, command));
                 } else {
                     VanillaCinematics.sendMessage(source, "Node of index #%d at %s was not found".formatted(index, id));
                 }
@@ -212,7 +267,8 @@ public class SequenceCommand {
                 Vec3d eyePos = new Vec3d(standPos.x, standPos.y + armorStandEyeHeight, standPos.z);
 
                 if (function != null) {
-                    CommandDispatcher<ServerCommandSource> dispatcher = source.getServer().getCommandManager().getDispatcher();
+                    CommandDispatcher<ServerCommandSource> dispatcher = 
+                            source.getServer().getCommandManager().getDispatcher();
                     ParseResults<ServerCommandSource> results = dispatcher.parse(function, source);
                     if (results.getReader().canRead()) {
                         VanillaCinematics.sendMessage(source, "Invalid command \"" + function + "\"");
@@ -221,7 +277,8 @@ public class SequenceCommand {
                 }
 
                 seq.appendCameraNode(new Node(standPos, eyePos, rotation.x, rotation.y, delay, function));
-                VanillaCinematics.sendMessage(source, "Appended node to %s at position: %.2f, %.2f, %.2f".formatted(id, pos.x, pos.y, pos.z));
+                VanillaCinematics.sendMessage(source, "Appended node to %s at position: %.2f, %.2f, %.2f".
+                        formatted(id, pos.x, pos.y, pos.z));
                 return 1;
             }
         }

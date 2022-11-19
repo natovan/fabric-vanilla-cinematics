@@ -8,10 +8,13 @@ import com.google.gson.JsonObject;
 import com.mojang.logging.LogUtils;
 import fi.dy.masa.malilib.util.JsonUtils;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.WorldSavePath;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * I don't really know what I'm doing for now, I just like name DataStorage
@@ -21,7 +24,7 @@ public class DataStorage {
     public static final DataStorage INSTANCE = new DataStorage();
     public static final Logger LOGGER = LogUtils.getLogger();
     private final MinecraftClient mc = MinecraftClient.getInstance();
-    private final String dataFolderName = "vanillanpcs";
+    private final String dataFolderName = VanillaCinematics.UNDERSCORE_MODID;
     private String currentWorldPath;
 
     public DataStorage() {}
@@ -56,7 +59,7 @@ public class DataStorage {
             return 0;
         }
         currentWorldPath = this.mc.getServer().getSavePath(WorldSavePath.ROOT).toString();
-        // todo: there is a dot at the end of path, I don't know where it came from
+        // there is a dot at the end of path, I don't know where it came from
         currentWorldPath = currentWorldPath.substring(0, currentWorldPath.length() - 2);
 
         File path = new File(currentWorldPath + "\\" + this.dataFolderName + "\\sequences.json");
@@ -77,4 +80,17 @@ public class DataStorage {
     }
 
     public void unload() {}
+
+    public void deleteData() {
+        MinecraftServer server = MinecraftClient.getInstance().getServer();
+        if (server != null) {
+            File path = new File(currentWorldPath + "/" + this.dataFolderName);
+            String dataPath = path.getPath();
+            try {
+                FileUtils.deleteDirectory(new File(dataPath));
+            } catch (IOException e) {
+                LOGGER.error("An error occurred while deleting data", e);
+            }
+        }
+    }
 }
