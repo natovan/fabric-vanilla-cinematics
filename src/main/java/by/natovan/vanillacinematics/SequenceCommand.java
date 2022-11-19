@@ -28,9 +28,8 @@ public class SequenceCommand {
     {
         dispatcher.register(literal("sequence").
                 then(literal("render").
-                        then(literal("set").
-                                then(argument("render", bool()).
-                                        executes((c) -> render(c.getSource(), getBool(c, "render")))))).
+                        then(argument("render", bool()).
+                                executes((c) -> render(c.getSource(), getBool(c, "render"))))).
                 then(literal("load").
                         executes((c) -> load(c.getSource()))).
                 then(literal("write").
@@ -57,7 +56,7 @@ public class SequenceCommand {
                                                                         getInteger(c, "delay"),
                                                                         getVec3(c, "pos"),
                                                                         getVec2(c, "rotation"),
-                                                                        getString(c, "function")))))).
+                                                                        getString(c, "function")))))))).
                         then(argument("index", integer()).
                                 then(literal("delay").
                                         then(argument("delay", integer()).
@@ -96,7 +95,7 @@ public class SequenceCommand {
                         then(literal("delete").
                                 executes((c) -> deleteCommand(
                                         c.getSource(),
-                                        getString(c, "id"))))))));
+                                        getString(c, "id"))))));
     }
 
     private static int newCommand(ServerCommandSource source, String id) {

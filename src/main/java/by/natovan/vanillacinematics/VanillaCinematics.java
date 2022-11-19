@@ -18,6 +18,9 @@ import java.util.Locale;
 public class VanillaCinematics implements ModInitializer {
     public static final Logger LOGGER = LogUtils.getLogger();
     public static final String MODID = "vanillacinematics";
+    public static final String CAMEL_SPACED_MODID = "Vanilla Cinematics";
+    public static final String CAMEL_MODID = "VanillaCinematics";
+    public static final String UNDERSCORE_MODID = "vanilla_cinematics";
     public static List<NodeSequence> sequences = new ArrayList<>();
 
     @Override
