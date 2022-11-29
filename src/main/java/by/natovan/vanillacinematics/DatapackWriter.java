@@ -147,7 +147,7 @@ public class DatapackWriter {
                         " Tags:['sequence_%s', 'sequence_node_%d', 'current_sequence_node']}\n").
                         formatted(n.getStandPos().x, n.getStandPos().y, n.getStandPos().z,
                                 n.getYaw(), n.getPitch(), seqName, nodeIndex));
-                // And spactate it
+                // And spectate it
                 nodeWriter.write("spectate @e[tag=current_sequence_node, limit=1] @a[limit=1]\n");
                 if (n.getCommand() != null) {
                     // Execute node command if present
