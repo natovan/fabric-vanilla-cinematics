@@ -185,7 +185,7 @@ public class DatapackWriter {
             endWriter.write(
                 """
                 kill @e[tag=sequence_%1$s, tag=sequence_node_%2$d]
-                scoreboard players set @a[limit=1] in_sequence 0
+                scoreboard objectives remove in_sequence
                 execute at @a run tp @a @e[tag=sequence_%s, tag=sequence_node_player_pos, limit=1]
                 execute at @a run tp @a ~ ~ ~ facing entity @e[tag=sequence_%1$s, tag=sequence_node_player_looking_at, limit=1]
                 gamemode adventure @a
