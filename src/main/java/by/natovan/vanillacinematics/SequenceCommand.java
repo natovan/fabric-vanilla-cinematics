@@ -5,6 +5,7 @@ import by.natovan.vanillacinematics.sequence.NodeSequence;
 import by.natovan.vanillacinematics.render.NodeRenderer;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
+import net.minecraft.command.argument.PosArgument;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.util.math.Vec2f;
@@ -16,14 +17,15 @@ import static com.mojang.brigadier.arguments.BoolArgumentType.bool;
 import static com.mojang.brigadier.arguments.BoolArgumentType.getBool;
 import static com.mojang.brigadier.arguments.StringArgumentType.*;
 import static com.mojang.brigadier.arguments.IntegerArgumentType.*;
-import static net.minecraft.command.argument.Vec2ArgumentType.getVec2;
+import static net.minecraft.command.argument.RotationArgumentType.getRotation;
+import static net.minecraft.command.argument.RotationArgumentType.rotation;
 import static net.minecraft.command.argument.Vec2ArgumentType.vec2;
 import static net.minecraft.command.argument.Vec3ArgumentType.getVec3;
 import static net.minecraft.command.argument.Vec3ArgumentType.vec3;
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
 
-public class SequenceCommand {
+class SequenceCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher)
     {
         dispatcher.register(literal("sequence").
@@ -58,13 +60,13 @@ public class SequenceCommand {
                         then(literal("append").
                                 then(argument("delay", integer()).
                                         then(argument("pos", vec3()).
-                                                then(argument("rotation", vec2()).
+                                                then(argument("rotation", rotation()).
                                                         executes((c) -> appendCommand(
                                                                 c.getSource(),
                                                                 getString(c, "id"),
                                                                 getInteger(c, "delay"),
                                                                 getVec3(c, "pos"),
-                                                                getVec2(c, "rotation"),
+                                                                getRotation(c, "rotation"),
                                                                 null)).
                                                         then(argument("function", string()).
                                                                 executes((c) -> appendCommand(
@@ -72,7 +74,7 @@ public class SequenceCommand {
                                                                         getString(c, "id"),
                                                                         getInteger(c, "delay"),
                                                                         getVec3(c, "pos"),
-                                                                        getVec2(c, "rotation"),
+                                                                        getRotation(c, "rotation"),
                                                                         getString(c, "function")))))))).
                         then(argument("index", integer()).
                                 then(literal("delay").
@@ -95,7 +97,7 @@ public class SequenceCommand {
                                                         c.getSource(),
                                                         getString(c, "id"),
                                                         getInteger(c, "index"),
-                                                        getVec2(c, "rotation"))))).
+                                                        getRotation(c, "rotation"))))).
                                 then(literal("command").
                                         then(argument("command", string()).
                                                 executes((c) -> commandCommand(
@@ -196,13 +198,14 @@ public class SequenceCommand {
         return 1;
     }
 
-    private static int rotationCommand(ServerCommandSource source, String id, int index, Vec2f rotation) {
+    private static int rotationCommand(ServerCommandSource source, String id, int index, PosArgument rotation) {
         for (NodeSequence seq : VanillaCinematics.sequences) {
             if (seq.getSequenceName().equals(id)) {
                 if (seq.getCameraNodes().size() - 1 >= index) {
-                    seq.getCameraNodes().get(index).setRotation(rotation);
+                    Vec2f rot = rotation.toAbsoluteRotation(source);
+                    seq.getCameraNodes().get(index).setRotation(rot);
                     VanillaCinematics.sendMessage(source, "Set rotation of %s at node #%d to %f, %f".
-                            formatted(id, index, rotation.x, rotation.y));
+                            formatted(id, index, rot.y, rot.x));
                 } else {
                     VanillaCinematics.sendMessage(source, "Node of index #%d at %s was not found".formatted(index, id));
                 }
@@ -255,11 +258,12 @@ public class SequenceCommand {
         return 1;
     }
 
-    private static int appendCommand(ServerCommandSource source, String id, int delay, Vec3d pos, Vec2f rotation, @Nullable String function) {
+    private static int appendCommand(ServerCommandSource source, String id, int delay, Vec3d pos, PosArgument rotation, @Nullable String function) {
         if (source.getPlayer() == null) return 0;
 
         for (NodeSequence seq : VanillaCinematics.sequences) {
             if (seq.getSequenceName().equals(id)) {
+
                 // todo: encrease precision here
                 final float armorStandEyeHeight = 1.7f; // i don't know actually
                 final double yOffset = 0.198;           // i don't know this eather
@@ -267,7 +271,7 @@ public class SequenceCommand {
                 Vec3d eyePos = new Vec3d(standPos.x, standPos.y + armorStandEyeHeight, standPos.z);
 
                 if (function != null) {
-                    CommandDispatcher<ServerCommandSource> dispatcher = 
+                    CommandDispatcher<ServerCommandSource> dispatcher =
                             source.getServer().getCommandManager().getDispatcher();
                     ParseResults<ServerCommandSource> results = dispatcher.parse(function, source);
                     if (results.getReader().canRead()) {
@@ -276,7 +280,8 @@ public class SequenceCommand {
                     }
                 }
 
-                seq.appendCameraNode(new Node(standPos, eyePos, rotation.x, rotation.y, delay, function));
+                Vec2f rot = rotation.toAbsoluteRotation(source);
+                seq.appendCameraNode(new Node(standPos, eyePos, rot.y, rot.x, delay, function));
                 VanillaCinematics.sendMessage(source, "Appended node to %s at position: %.2f, %.2f, %.2f".
                         formatted(id, pos.x, pos.y, pos.z));
                 return 1;
