@@ -10,6 +10,7 @@ import javax.annotation.Nullable;
 
 public class Node {
 
+    private boolean smooth;
     public boolean isWritten = false;
     private Vec3d standPos;
     private Vec3d eyePos;
@@ -18,13 +19,14 @@ public class Node {
     private int delay; // in ticks
     private String command;
 
-    public Node(Vec3d pos, Vec3d eyePos, float yaw, float pitch, int delay, @Nullable String command) {
+    public Node(Vec3d pos, Vec3d eyePos, float yaw, float pitch, int delay, boolean smooth, @Nullable String command) {
         // todo: refactor this, generate eye pos and stand pos here instead of out of the class
         this.standPos   = pos;
         this.eyePos     = eyePos;
         this.yaw        = yaw;
         this.pitch      = pitch;
         this.delay      = delay;
+        this.smooth     = smooth;
         this.command    = command;
         this.isWritten  = false;
     }
@@ -35,6 +37,7 @@ public class Node {
         this.yaw        = object.get("yaw").getAsFloat();
         this.pitch      = object.get("pitch").getAsFloat();
         this.delay      = object.get("delay").getAsInt();
+        this.smooth     = object.get("smooth").getAsBoolean();
         if (object.has("command")) {
             this.command = object.get("command").getAsString();
         }
@@ -94,10 +97,13 @@ public class Node {
         node.add("yaw", new JsonPrimitive(this.yaw));
         node.add("pitch", new JsonPrimitive(this.pitch));
         node.add("delay", new JsonPrimitive(this.delay));
+        node.add("smooth", new JsonPrimitive(this.smooth));
 
         if (this.command != null) {
             node.add("command", new JsonPrimitive(this.command));
         }
         return node;
     }
+
+    public boolean getSmooth() { return this.smooth; }
 }

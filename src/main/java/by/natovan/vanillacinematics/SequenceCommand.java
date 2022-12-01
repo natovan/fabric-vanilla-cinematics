@@ -32,8 +32,6 @@ class SequenceCommand {
                 then(literal("data").
                         then(literal("load").
                                 executes((c) -> load(c.getSource()))).
-                        then(literal("delete").
-                                executes((c) -> delete(c.getSource()))).
                         then(literal("write").
                                 executes((c) -> write(c.getSource())))).
                 then(literal("render").
@@ -67,7 +65,17 @@ class SequenceCommand {
                                                                 getInteger(c, "delay"),
                                                                 getVec3(c, "pos"),
                                                                 getRotation(c, "rotation"),
+                                                                false,
                                                                 null)).
+                                                        then(argument("smooth", bool()).
+                                                                executes((c) -> appendCommand(
+                                                                        c.getSource(),
+                                                                        getString(c, "id"),
+                                                                        getInteger(c, "delay"),
+                                                                        getVec3(c, "pos"),
+                                                                        getRotation(c, "rotation"),
+                                                                        getBool(c, "smooth"),
+                                                                        null)).
                                                         then(argument("function", string()).
                                                                 executes((c) -> appendCommand(
                                                                         c.getSource(),
@@ -75,6 +83,7 @@ class SequenceCommand {
                                                                         getInteger(c, "delay"),
                                                                         getVec3(c, "pos"),
                                                                         getRotation(c, "rotation"),
+                                                                        getBool(c, "smooth"),
                                                                         getString(c, "function")))))))).
                         then(argument("index", integer()).
                                 then(literal("delay").
@@ -104,7 +113,7 @@ class SequenceCommand {
                                                         c.getSource(),
                                                         getString(c, "id"),
                                                         getInteger(c, "index"),
-                                                        getString(c, "command")))))).
+                                                        getString(c, "command")))))))).
                         then(literal("name").
                                 then(argument("name", word()).
                                         executes((c) -> nameCommand(
@@ -114,7 +123,7 @@ class SequenceCommand {
                         then(literal("delete").
                                 executes((c) -> deleteCommand(
                                         c.getSource(),
-                                        getString(c, "id"))))));
+                                        getString(c, "id")))));
     }
 
     private static int deleteNode(ServerCommandSource source, String id, int index) {
@@ -142,13 +151,6 @@ class SequenceCommand {
             }
         }
         VanillaCinematics.sendMessage(source, "No sequence and/or node was found");
-        return 1;
-    }
-
-    private static int delete(ServerCommandSource source) {
-        DataStorage.INSTANCE.deleteData();
-        DatapackWriter.INSTANCE.deleteDatapack();
-        VanillaCinematics.sendMessage(source, "Deleted all data");
         return 1;
     }
 
@@ -258,7 +260,7 @@ class SequenceCommand {
         return 1;
     }
 
-    private static int appendCommand(ServerCommandSource source, String id, int delay, Vec3d pos, PosArgument rotation, @Nullable String function) {
+    private static int appendCommand(ServerCommandSource source, String id, int delay, Vec3d pos, PosArgument rotation, boolean smooth, @Nullable String function) {
         if (source.getPlayer() == null) return 0;
 
         for (NodeSequence seq : VanillaCinematics.sequences) {
@@ -281,7 +283,7 @@ class SequenceCommand {
                 }
 
                 Vec2f rot = rotation.toAbsoluteRotation(source);
-                seq.appendCameraNode(new Node(standPos, eyePos, rot.y, rot.x, delay, function));
+                seq.appendCameraNode(new Node(standPos, eyePos, rot.y, rot.x, delay, smooth, function));
                 VanillaCinematics.sendMessage(source, "Appended node to %s at position: %.2f, %.2f, %.2f".
                         formatted(id, pos.x, pos.y, pos.z));
                 return 1;

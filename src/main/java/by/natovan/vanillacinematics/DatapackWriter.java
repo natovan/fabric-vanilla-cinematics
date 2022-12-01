@@ -6,7 +6,7 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.WorldSavePath;
-import org.apache.commons.io.FileUtils;
+import net.minecraft.util.math.Vec3d;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -16,10 +16,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 // todo: write to tmp files first
+// todo: this whole thing NEEDS refactor
 public class DatapackWriter {
     public static final DatapackWriter INSTANCE = new DatapackWriter();
     private static final Logger LOGGER = LogUtils.getLogger();
-    private boolean wasInitiated = false;
     private static final String VC_FUNC_PATH = "\\" + VanillaCinematics.CAMEL_MODID +
             "\\data\\" + VanillaCinematics.UNDERSCORE_MODID + "\\functions\\";
     private static final String VC_TAGS_FUNC_PATH = "\\" + VanillaCinematics.CAMEL_MODID +
@@ -81,11 +81,10 @@ public class DatapackWriter {
         } catch (IOException e) {
             LOGGER.error("An error occurred while writing to datapack", e);
         }
-        wasInitiated = true;
     }
 
     public int writeSequence(NodeSequence s) {
-        if (!wasInitiated) initDatapack();
+        initDatapack();
 
         final MinecraftServer server = MinecraftClient.getInstance().getServer();
         if (server == null) return 0;
@@ -95,6 +94,12 @@ public class DatapackWriter {
         try {
             // create folder for cinematic
             Files.createDirectories(Paths.get(datapacksPath + VC_FUNC_PATH + "cinematics\\" + seqName));
+
+            // main.mcfunction
+            FileWriter mainFuncWriter = new FileWriter(datapacksPath + VC_FUNC_PATH + "main.mcfunction", true);
+            mainFuncWriter.write("execute if score @a[limit=1] in_sequence_%s matches 1 run function vanilla_cinematics:cinematics/%s/repeat\n".formatted(seqName, seqName));
+            mainFuncWriter.close();
+
 
             // start.mcfunction
             File startMcFuncFile = new File(datapacksPath + VC_FUNC_PATH +
@@ -112,16 +117,34 @@ public class DatapackWriter {
                     execute at @a run summon minecraft:area_effect_cloud ~ ~ ~ {Tags:['sequence_%1$s', 'sequence_node_player_looking_at'], Radius:0, Duration:216374}
                     execute at @a run tp @e[tag=sequence_%1$s, tag=sequence_node_player_looking_at] ^ ^ ^4
                     gamemode spectator @a
+                    scoreboard objectives add in_sequence_%1$s dummy
+                    scoreboard players set @a[limit=1] in_sequence_%1$s 1
                     scoreboard objectives add in_sequence dummy
                     scoreboard players set @a[limit=1] in_sequence 1
                     function %2$s:cinematics/%1$s/node0""".
                     formatted(seqName, VC_MODID));
             startMcFuncWriter.close();
 
+
+            // repeat.mcfunction
+            File repeatMcFuncFile = new File(datapacksPath + VC_FUNC_PATH +
+                    "cinematics\\" + seqName + "\\repeat.mcfunction");
+            if (repeatMcFuncFile.createNewFile()) {
+                LOGGER.info(seqName + "\\repeat.mcfunction created");
+            } else {
+                LOGGER.warn(seqName + "\\repeat.mcfunction already exists");
+            }
+            FileWriter repeatMcFuncWriter = new FileWriter(datapacksPath + VC_FUNC_PATH +
+                    "cinematics\\" + seqName + "\\repeat.mcfunction");
+
+
             // nodes
-            int nodeIndex = 0;
-            for (; nodeIndex < s.getCameraNodes().size(); nodeIndex++) {
-                // Create node mcfunction
+            for (int nodeIndex = 0; nodeIndex < s.getCameraNodes().size(); nodeIndex++) {
+
+
+                // Write to node.mcfunction and repeat.mcfunction
+
+                // Create node.mcfunction
                 File nodeMcFuncFile = new File(datapacksPath + VC_FUNC_PATH +
                         "cinematics\\" + seqName + "\\node" + nodeIndex + ".mcfunction");
                 if (nodeMcFuncFile.createNewFile()) {
@@ -130,18 +153,32 @@ public class DatapackWriter {
                     LOGGER.warn(seqName + "\\node" + nodeIndex + ".mcfunction already exists");
                 }
 
-
-                // Write to node mcfunction file
-
                 FileWriter nodeWriter = new FileWriter(datapacksPath + VC_FUNC_PATH +
                         "cinematics\\" + seqName + "\\node" + nodeIndex + ".mcfunction");
-                if (nodeIndex > 0) {
-                    // Remove tag from previus node entity
-                    nodeWriter.write("tag @e[tag=sequence_node_%d] remove current_sequence_node\n".
-                            formatted(nodeIndex - 1));
-                }
-                // Summon current node entity
                 Node n = s.getCameraNodes().get(nodeIndex);
+
+                if (nodeIndex > 0) {
+                    // Kill prev node entity
+                    nodeWriter.write("kill @e[tag=sequence_%s, tag=sequence_node_%d]\n".
+                            formatted(seqName, nodeIndex - 1));
+                    // If prev node had smooth trans score - remove it
+                    nodeWriter.write("execute if score @a[limit=1] node_%d_smooth_trans matches 1 run scoreboard objectives remove node_%d_smooth_trans\n".formatted(nodeIndex - 1, nodeIndex - 1));
+                }
+
+                // If smooth add repeating command to repeat.mcfunction and create scoreboard objective node
+                if (n.getSmooth()) {
+                    if (s.getCameraNodes().size() - 1 > nodeIndex)  {
+                        Node next = s.getCameraNodes().get(nodeIndex + 1);
+                        String offset = getPositionOffset(n.getStandPos(), next.getStandPos(), n.getDelay());
+                        repeatMcFuncWriter.write("execute if score @a[limit=1] node_%d_smooth_trans matches 1 at @e[tag=current_sequence_node] run tp @e[tag=current_sequence_node] %s\n".formatted(nodeIndex, offset));
+                        nodeWriter.write("scoreboard objectives add node_%d_smooth_trans dummy\n".formatted(nodeIndex));
+                        nodeWriter.write("scoreboard players set @a[limit=1] node_%d_smooth_trans 1\n".formatted(nodeIndex));
+                    } else {
+                        LOGGER.warn("Smooth flag at last node, ignoring");
+                    }
+                }
+
+                // Summon current node entity
                 nodeWriter.write(("summon minecraft:armor_stand %f %f %f " +
                         "{Rotation:[%ff, %ff], Invisible:1, NoGravity:1," +
                         " Tags:['sequence_%s', 'sequence_node_%d', 'current_sequence_node']}\n").
@@ -149,26 +186,20 @@ public class DatapackWriter {
                                 n.getYaw(), n.getPitch(), seqName, nodeIndex));
                 // And spectate it
                 nodeWriter.write("spectate @e[tag=current_sequence_node, limit=1] @a[limit=1]\n");
-                if (n.getCommand() != null) {
-                    // Execute node command if present
+                if (n.getCommand() != null) // Execute node command if present
                     nodeWriter.write(n.getCommand() + "\n");
-                }
-                if (nodeIndex > 0) {
-                    // Remove previus node entity
-                    nodeWriter.write("kill @e[tag=sequence_%s, tag=sequence_node_%d]\n".
-                            formatted(seqName, nodeIndex - 1));
-                }
-                if (nodeIndex == s.getCameraNodes().size() - 1){
-                    // If last, direct to end mcfunction
+
+                final byte tickDelay = 3; // Needed since node entity starts moving a little late for some reason
+                if (nodeIndex == s.getCameraNodes().size() - 1) { // If last, direct to end mcfunction
                     nodeWriter.write("schedule function " + VC_MODID + ":cinematics/%s/end %dt".
-                            formatted(seqName, n.getDelay()));
-                } else {
-                    // If not last, direct to next node
+                            formatted(seqName, n.getDelay()  + tickDelay));
+                } else { // If not last, direct to next node
                     nodeWriter.write("schedule function " + VC_MODID + ":cinematics/%s/node%d %dt".
-                            formatted(seqName, nodeIndex + 1, n.getDelay()));
+                            formatted(seqName, nodeIndex + 1, n.getDelay() + tickDelay));
                 }
                 nodeWriter.close();
             }
+            repeatMcFuncWriter.close();
 
 
             // end.mcfunction
@@ -186,12 +217,13 @@ public class DatapackWriter {
                 """
                 kill @e[tag=sequence_%1$s, tag=sequence_node_%2$d]
                 scoreboard objectives remove in_sequence
+                scoreboard objectives remove in_sequence_%1$s
                 execute at @a run tp @a @e[tag=sequence_%s, tag=sequence_node_player_pos, limit=1]
                 execute at @a run tp @a ~ ~ ~ facing entity @e[tag=sequence_%1$s, tag=sequence_node_player_looking_at, limit=1]
                 gamemode adventure @a
                 kill @e[tag=sequence_%1$s, tag=sequence_node_player_pos]
                 kill @e[tag=sequence_%1$s, tag=sequence_node_player_looking_at]""".
-                formatted(seqName, nodeIndex - 1));
+                formatted(seqName, s.getCameraNodes().size() - 1));
             endWriter.close();
         } catch (IOException e) {
             LOGGER.error("An error occurred while writing sequence " + seqName + " to datapack", e);
@@ -200,17 +232,22 @@ public class DatapackWriter {
         return 1;
     }
 
-    public void deleteDatapack() {
-        MinecraftServer server = MinecraftClient.getInstance().getServer();
-        if (server != null) {
-            String datapacksPath = server.getSavePath(WorldSavePath.DATAPACKS).toString();
-            try {
-                FileUtils.deleteDirectory(new File(datapacksPath + "\\" + VC_CAMEL));
-                wasInitiated = false;
-                LOGGER.info("Datapack deleted");
-            } catch (IOException e) {
-                LOGGER.error("An error occurred while deleting datapack", e);
-            }
-        }
+    private static String getPositionOffset(Vec3d from, Vec3d to, int delay) {
+        double xDist = from.x - to.x;
+        double yDist = from.y - to.y;
+        double zDist = from.z - to.z;
+        if (xDist < 0) xDist = -xDist;
+        if (yDist < 0) yDist = -yDist;
+        if (zDist < 0) zDist = -zDist;
+
+        if (from.x > to.x) xDist = -xDist;
+        if (from.y > to.y) yDist = -yDist;
+        if (from.z > to.z) zDist = -zDist;
+
+        double xOffset = xDist / delay;
+        double yOffset = yDist / delay;
+        double zOffset = zDist / delay;
+
+        return "~%f ~%f ~%f".formatted(xOffset, yOffset, zOffset);
     }
 }
